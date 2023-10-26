@@ -146,6 +146,11 @@ def read_error(name):
                 retry_type = outline.split(" ")
             if "terminated" in splitline and "evolution:" in splitline:
                 terminate_type = outline.split(" ")
+            if "ERROR" in splitline:
+                error_type = outline.split(" ")
+                terminate_type = error_type
+            if "specified photo does not exist" in outline:
+                terminate_type = "photo does not exist"
     print(retry_type, terminate_type)
     return retry_type, terminate_type
 
