@@ -66,7 +66,6 @@ def phases_params(initial_mass, Zinit):
                     'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 15,
-                    'max_years_for_timestep' : 1.3e4, 
                     'delta_lgTeff_limit' : 0.005, 'delta_lgTeff_hard_limit' : 0.01,
                     'delta_lgL_limit' : 0.02, 'delta_lgL_hard_limit' : 0.05,
                     'okay_to_reduce_gradT_excess' : True, 'scale_max_correction' : 0.1,
@@ -82,7 +81,6 @@ def phases_params(initial_mass, Zinit):
                 'Early MS Evolution' :
                     {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'mesh_delta_coeff': 1,
-                    'max_years_for_timestep' : 0.75e6, 
                     'delta_lgTeff_limit' : 0.00015, 'delta_lgTeff_hard_limit' : 0.0015,
                     'delta_lgL_limit' : 0.0005, 'delta_lgL_hard_limit' : 0.005,
                     'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4,
@@ -98,7 +96,6 @@ def phases_params(initial_mass, Zinit):
                 'Evolution to TAMS' :
                     {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'mesh_delta_coeff': 1.25,
-                    'max_years_for_timestep' : 1e7,
                     'delta_lgTeff_limit' : 0.0006, 'delta_lgTeff_hard_limit' : 0.006,
                     'delta_lgL_limit' : 0.002, 'delta_lgL_hard_limit' : 0.02,
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1,
@@ -114,7 +111,6 @@ def phases_params(initial_mass, Zinit):
                 'Evolution post-MS' :
                     {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'mesh_delta_coeff': 1.25,
-                    'max_years_for_timestep' : 1e7,
                     'delta_lgTeff_limit' : 0.0006, 'delta_lgTeff_hard_limit' : 0.006,
                     'delta_lgL_limit' : 0.002, 'delta_lgL_hard_limit' : 0.02,
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1,
