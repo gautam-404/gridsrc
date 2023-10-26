@@ -228,13 +228,13 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
     else:
         if not os.path.exists(archive_path):
             os.mkdir(archive_path)
-        os.mkdir(os.path.join(archive_path, "tracks"))
-        os.mkdir(os.path.join(archive_path, "histories"))
-        os.mkdir(os.path.join(archive_path, "profile_indexes"))
-        os.mkdir(os.path.join(archive_path, "profiles"))
-        os.mkdir(os.path.join(archive_path, "gyre"))
-        os.mkdir(os.path.join(archive_path, "failed"))
-        os.mkdir(os.path.join(archive_path, "runlogs"))
+            os.mkdir(os.path.join(archive_path, "tracks"))
+            os.mkdir(os.path.join(archive_path, "histories"))
+            os.mkdir(os.path.join(archive_path, "profile_indexes"))
+            os.mkdir(os.path.join(archive_path, "profiles"))
+            os.mkdir(os.path.join(archive_path, "gyre"))
+            os.mkdir(os.path.join(archive_path, "failed"))
+            os.mkdir(os.path.join(archive_path, "runlogs"))
 
 def progress_columns():
     '''Define progress bar columns'''
