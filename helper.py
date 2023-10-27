@@ -53,7 +53,7 @@ def phases_params(initial_mass, Zinit):
     '''
     Yinit, initial_h1, initial_h2, initial_he3, initial_he4 = initial_abundances(Zinit)
 
-    params = { 'Evolution to ZAMS':
+    params = { 'Evolution to Pre-MS':
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'Zbase': Zinit, 'initial_y': Yinit,
                      'mesh_delta_coeff': 1,
                     'initial_h1': initial_h1,'initial_h2': initial_h2, 
@@ -77,6 +77,22 @@ def phases_params(initial_mass, Zinit):
                     'trace_history_value_name(5)': 'log_g',
                     'trace_history_value_name(6)': 'log_R',
                     'trace_history_value_name(7)': 'star_mass'},
+                    
+                'Evolution to ZAMS' :
+                    {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
+                    'mesh_delta_coeff': 1,
+                    'delta_lgTeff_limit' : 0.00015, 'delta_lgTeff_hard_limit' : 0.0015,
+                    'delta_lgL_limit' : 0.0005, 'delta_lgL_hard_limit' : 0.005,
+                    'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4,
+                    'num_trace_history_values': 7, 
+                    'trace_history_value_name(1)': 'surf_avg_v_rot',
+                    'trace_history_value_name(2)': 'surf_avg_omega_div_omega_crit',
+                    'trace_history_value_name(3)': 'log_total_angular_momentum',
+                    'trace_history_value_name(4)': 'surf_escape_v',
+                    'trace_history_value_name(5)': 'log_g',
+                    'trace_history_value_name(6)': 'log_R',
+                    'trace_history_value_name(7)': 'star_mass'},
+
 
                 'Early MS Evolution' :
                     {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
