@@ -262,7 +262,7 @@
       ! NOTE: you can list specific categories by giving their names (from chem_def)
       pp
       cno
-      tri_alpha
+      !tri_alpha
       !c_alpha
       !n_alpha
       !o_alpha
@@ -570,9 +570,9 @@
    !log_am_nu_rot ! log10(am_nu_rot)
    !log_am_nu ! log10(am_nu_non_rot + am_nu_rot)
       
-   !r_polar ! (Rsun)
+   r_polar ! (Rsun)
    !log_r_polar ! log10 (Rsun)
-   !r_equatorial ! (Rsun)
+   r_equatorial ! (Rsun)
    !log_r_equatorial ! log10 (Rsun)
    !r_e_div_r_p ! equatorial/r_polar
    omega_crit ! breakup angular velocity = sqrt(G M / equatorial^3)
