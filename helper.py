@@ -78,7 +78,7 @@ def phases_params(initial_mass, Zinit):
                     'trace_history_value_name(6)': 'log_R',
                     'trace_history_value_name(7)': 'star_mass'},
                     
-                'Evolution to ZAMS' :
+                'Pre-MS Evolution' :
                     {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'mesh_delta_coeff': 1,
                     'delta_lgTeff_limit' : 0.00015, 'delta_lgTeff_hard_limit' : 0.0015,
@@ -242,6 +242,7 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
         os.mkdir(os.path.join(archive_path, "gyre"))
         os.mkdir(os.path.join(archive_path, "failed"))
         os.mkdir(os.path.join(archive_path, "runlogs"))
+        os.mkdir(os.path.join(archive_path, "inlists"))
     else:
         if not os.path.exists(archive_path):
             os.mkdir(archive_path)
@@ -252,6 +253,7 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
             os.mkdir(os.path.join(archive_path, "gyre"))
             os.mkdir(os.path.join(archive_path, "failed"))
             os.mkdir(os.path.join(archive_path, "runlogs"))
+            os.mkdir(os.path.join(archive_path, "inlists"))
 
 def progress_columns():
     '''Define progress bar columns'''
