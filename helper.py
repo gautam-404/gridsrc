@@ -53,7 +53,7 @@ def phases_params(initial_mass, Zinit):
     '''
     Yinit, initial_h1, initial_h2, initial_he3, initial_he4 = initial_abundances(Zinit)
 
-    params = { 'Evolution to Pre-MS':
+    params = { 'Create Pre-MS Model' :
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'Zbase': Zinit, 'initial_y': Yinit,
                      'mesh_delta_coeff': 1,
                     'initial_h1': initial_h1,'initial_h2': initial_h2, 
