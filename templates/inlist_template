@@ -1,6 +1,6 @@
 &star_job
 
-	!# output
+	! output
 	history_columns_file = 'history_columns.list'
 	profile_columns_file = 'profile_columns.list'
 	pgstar_flag = .false.    ! (dont) display on-screen plots
@@ -8,7 +8,7 @@
 	save_photo_when_terminate = .true.
 	show_log_description_at_start = .true.
 
-    !# misc 
+    ! misc 
 	!num_steps_for_garbage_collection = 0 ! might be required on networked computers
 
 / !end of star_job namelist
@@ -30,21 +30,21 @@
 
 
 &controls
-	!# specifications for starting model
+	! specifications for starting model
 	!initial_mass = 1.5 ! in Msun units
 
-	!# when to stop
+	! when to stop
 	!max_age = 1d-3 ! max age in years
 	min_timestep_limit = 0
 
-	!# mixing parameters
+	! mixing parameters
 	mixing_length_alpha = 1.900
 	MLT_option = 'Henyey'
 	use_Ledoux_criterion = .true.
 	alpha_semiconvection = 0
 	thermohaline_coeff = 0
 
-	!# overshooting
+	! overshooting
 	! These values are from May Pedersen by email
 	overshoot_scheme(1) = 'exponential'
 	overshoot_zone_type(1) = 'burn_H'
@@ -64,7 +64,7 @@
 	! Overshooting shuts off when the exponential decay has dropped the diffusion coefficient to this level.
 	overshoot_D_min = 1d-2
 
-	!# controls for output
+	! controls for output
 
 	star_history_name = 'history.data'
 
@@ -81,19 +81,19 @@
 	profile_interval = 50
 	max_num_profile_models = 1500
  
-	!# mass gain or loss
+	! mass gain or loss
 
-	!# nuclear reaction controls
+	! nuclear reaction controls
 
 	default_net_name = 'pp_and_hot_cno.net'
 
-	!# element diffusion
+	! element diffusion
 
 	show_diffusion_info = .false.
 	do_element_diffusion = .false.
 	!diffusion_dt_limit = 3.15d7
 
-	!# timestep controls
+	! timestep controls
 
 	!max_timestep = 3.15d13  
 
@@ -103,19 +103,20 @@
 	delta_lgL_limit = 0.02 
 	delta_lgL_hard_limit = 0.05
 
-	mesh_delta_coeff = 1.0 ! should be as low as 0.1 ideally, but in practice most people accept 1.0.
+	mesh_delta_coeff = 1.0 
+	! should be as low as 0.1 ideally, but in practice most people accept 1.0.
 	! 1.25 is fast for a grid, and accurate enough (tested 6 Sep 2021)
 	max_allowed_nz = 25000 ! max allowed number of zones
 	min_allowed_varcontrol_target = 1d-4
 	varcontrol_target = 5d-4
 
-	!# atm
+	! atm
 
 	atm_option = 'T_tau'
 	atm_T_tau_relation =  'Eddington'
 	atm_T_tau_opacity = 'fixed' !'iterated'
 
-	!# miscellaneous controls
+	! miscellaneous controls
 
 	warn_when_large_rel_run_E_err = 99d0
 	
