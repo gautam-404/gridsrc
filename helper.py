@@ -69,8 +69,7 @@ def phases_params(initial_mass, Zinit):
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 15,
                     'delta_lgTeff_limit' : 0.005, 'delta_lgTeff_hard_limit' : 0.01,
                     'delta_lgL_limit' : 0.02, 'delta_lgL_hard_limit' : 0.05,
-                    'okay_to_reduce_gradT_excess' : True, 'Pextra_factor' : 1.0, 'scale_max_correction':0.1,
-                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
+                    'okay_to_reduce_gradT_excess' : True, 'Pextra_factor' : 1.0, 'scale_max_correction':0.1},
                     
                 'Pre-MS Evolution' :
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
@@ -81,9 +80,7 @@ def phases_params(initial_mass, Zinit):
                     'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
                     'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.0005, 'delta_lgL_hard_limit' : 0.005,
-                    'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4,
-                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
-                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
+                    'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4},
 
 
                 'Early MS Evolution' :
@@ -95,9 +92,7 @@ def phases_params(initial_mass, Zinit):
                     'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
                     'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.0005, 'delta_lgL_hard_limit' : 0.005,
-                    'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4,
-                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
-                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
+                    'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4},
 
                 'Evolution to TAMS' :
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
@@ -108,9 +103,7 @@ def phases_params(initial_mass, Zinit):
                     'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
                     'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.002, 'delta_lgL_hard_limit' : 0.02,
-                    'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1,
-                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
-                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
+                    'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1},
 
                 'Evolution post-MS' :
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
@@ -121,9 +114,7 @@ def phases_params(initial_mass, Zinit):
                     'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
                     'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.002, 'delta_lgL_hard_limit' : 0.02,
-                    'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1,
-                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
-                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
+                    'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1},
     }
 
     return params
