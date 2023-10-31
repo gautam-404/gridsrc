@@ -85,8 +85,6 @@
 
 	! nuclear reaction controls
 
-	default_net_name = 'pp_and_hot_cno.net'
-
 	! element diffusion
 
 	show_diffusion_info = .false.

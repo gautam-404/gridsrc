@@ -6,8 +6,7 @@ import tarfile
 import numpy as np
 from rich import progress, live, console, panel, prompt, print
 from contextlib import contextmanager
-import pandas as pd
-from scipy.stats import linregress
+import time
 
 
 Y_sun_phot = 0.2485 # Asplund+2009
@@ -53,15 +52,16 @@ def phases_params(initial_mass, Zinit):
     '''
     Yinit, initial_h1, initial_h2, initial_he3, initial_he4 = initial_abundances(Zinit)
 
-    params = { 'Create Pre-MS Model' :
+    params = {  'Create Pre-MS Model' :
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'Zbase': Zinit, 'initial_y': Yinit,
-                     'mesh_delta_coeff': 1,
+                     'mesh_delta_coeff': 1.25,
                     'initial_h1': initial_h1,'initial_h2': initial_h2, 
                     'initial_he3': initial_he3, 'initial_he4': initial_he4,
                     'create_pre_main_sequence_model': True, 'pre_ms_T_c': 9e5,
                     'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
                     'set_initial_model_number' : True, 'initial_model_number' : 0,
-                    'change_net' : True, 'new_net_name' : 'pp_and_hot_cno.net',  
+                    # 'change_net' : True, 'new_net_name' : 'pp_and_hot_cno.net',  
+                    'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
                     'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     # 'set_rates_preference' : True, 'new_rates_preference' : 2,   ## Not available in newer versions
                     'show_net_species_info' : True, 'show_net_reactions_info' : True,
@@ -69,47 +69,61 @@ def phases_params(initial_mass, Zinit):
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 15,
                     'delta_lgTeff_limit' : 0.005, 'delta_lgTeff_hard_limit' : 0.01,
                     'delta_lgL_limit' : 0.02, 'delta_lgL_hard_limit' : 0.05,
-                    'okay_to_reduce_gradT_excess' : True, 'scale_max_correction' : 0.1, 'Pextra_factor' : 1.0},
+                    'okay_to_reduce_gradT_excess' : True, 'Pextra_factor' : 1.0, 'scale_max_correction':0.1,
+                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
                     
                 'Pre-MS Evolution' :
-                    {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
-                    'mesh_delta_coeff': 1,
+                    {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
+                    'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
+                    'mesh_delta_coeff': 1.25,
                     'delta_lgTeff_limit' : 0.00015, 'delta_lgTeff_hard_limit' : 0.0015,
+                    'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
+                    'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
+                    'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.0005, 'delta_lgL_hard_limit' : 0.005,
                     'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4,
-                    'Pextra_factor' : 1.0},
+                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
+                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
 
 
                 'Early MS Evolution' :
-                    {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
-                    'mesh_delta_coeff': 1,
+                    {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
+                    'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
+                    'mesh_delta_coeff': 1.25,
                     'delta_lgTeff_limit' : 0.00015, 'delta_lgTeff_hard_limit' : 0.0015,
+                    'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
+                    'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
+                    'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.0005, 'delta_lgL_hard_limit' : 0.005,
                     'write_header_frequency': 10, 'history_interval': 4, 'terminal_interval': 10, 'profile_interval': 4,
-                    'num_trace_history_values': 7, 
-                    'trace_history_value_name(1)': 'surf_avg_v_rot',
-                    'trace_history_value_name(2)': 'surf_avg_omega_div_omega_crit',
-                    'trace_history_value_name(3)': 'log_total_angular_momentum',
-                    'trace_history_value_name(4)': 'surf_escape_v',
-                    'trace_history_value_name(5)': 'log_g',
-                    'trace_history_value_name(6)': 'log_R',
-                    'Pextra_factor' : 1.0},
+                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
+                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
 
                 'Evolution to TAMS' :
-                    {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
+                    {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
+                    'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'mesh_delta_coeff': 1.25,
                     'delta_lgTeff_limit' : 0.0006, 'delta_lgTeff_hard_limit' : 0.006,
+                    'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
+                    'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
+                    'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.002, 'delta_lgL_hard_limit' : 0.02,
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1,
-                    'Pextra_factor' : 1.0},
+                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
+                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
 
                 'Evolution post-MS' :
-                    {'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
+                    {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
+                    'Zbase': Zinit, 'change_initial_net' : False, 'show_net_species_info' : False, 'show_net_reactions_info' : False,
                     'mesh_delta_coeff': 1.25,
                     'delta_lgTeff_limit' : 0.0006, 'delta_lgTeff_hard_limit' : 0.006,
+                    'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
+                    'change_net' : True, 'new_net_name' : 'pp_and_cno_extras.net',  
+                    'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     'delta_lgL_limit' : 0.002, 'delta_lgL_hard_limit' : 0.02,
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 1,
-                    'Pextra_factor' : 1.0},
+                    'load_saved_model' : True, 'load_model_filename' : 'evo.mod',
+                    'save_model_when_terminate' : True, 'save_model_filename' : 'evo.mod'},
     }
 
     return params
