@@ -231,13 +231,3 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
             os.mkdir(os.path.join(archive_path, "failed"))
             os.mkdir(os.path.join(archive_path, "runlogs"))
             os.mkdir(os.path.join(archive_path, "inlists"))
-
-def progress_columns():
-    '''Define progress bar columns'''
-    progress_columns = (progress.SpinnerColumn(),
-                progress.TextColumn("[progress.description]{task.description}"),
-                progress.BarColumn(bar_width=60),
-                progress.MofNCompleteColumn(),
-                progress.TaskProgressColumn(),
-                progress.TimeElapsedColumn())
-    return progress_columns
