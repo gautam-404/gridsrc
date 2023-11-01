@@ -57,7 +57,7 @@ def phases_params(initial_mass, Zinit):
                      'mesh_delta_coeff': 1.25,
                     'initial_h1': initial_h1,'initial_h2': initial_h2, 
                     'initial_he3': initial_he3, 'initial_he4': initial_he4,
-                    'create_pre_main_sequence_model': True, 'pre_ms_T_c': 9e5,
+                    'create_pre_main_sequence_model': True, 'pre_ms_T_c': 9e5, 'pre_ms_relax_to_start_radiative_core' : False, 
                     'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
                     'set_initial_model_number' : True, 'initial_model_number' : 0,
                     # 'change_net' : True, 'new_net_name' : 'pp_and_hot_cno.net',  
@@ -68,8 +68,7 @@ def phases_params(initial_mass, Zinit):
                     'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
                     'write_header_frequency': 10, 'history_interval': 1, 'terminal_interval': 10, 'profile_interval': 15,
                     'delta_lgTeff_limit' : 0.005, 'delta_lgTeff_hard_limit' : 0.01,
-                    'delta_lgL_limit' : 0.02, 'delta_lgL_hard_limit' : 0.05,
-                    'okay_to_reduce_gradT_excess' : True, 'Pextra_factor' : 1.0, 'scale_max_correction':0.1},
+                    'delta_lgL_limit' : 0.02, 'delta_lgL_hard_limit' : 0.05},
                     
                 'Pre-MS Evolution' :
                     {'initial_mass': initial_mass, 'initial_z': Zinit, 'relax_mass' : True, 'lg_max_abs_mdot' : 6, 'new_mass' : initial_mass,
