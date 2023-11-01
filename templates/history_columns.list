@@ -58,7 +58,7 @@
       time_step ! timestep in years since previous model
       !time_step_sec ! timestep in seconds since previous model
       !time_step_days
-      log_dt ! log10 time_step in years
+      !log_dt ! log10 time_step in years
       !log_dt_sec ! log10 time_step in seconds
       !log_dt_days ! log10 time_step in days
 
@@ -367,7 +367,7 @@
 !# information about core and envelope
 
    !## helium core
-      !he_core_mass
+      he_core_mass
       !he_core_radius
       !he_core_lgT
       !he_core_lgRho
@@ -1016,7 +1016,7 @@
 
    !## solver iterations
 
-      !num_iters ! same as num_solver_iterations
+      num_iters ! same as num_solver_iterations
       !num_solver_iterations ! iterations at this step
       !total_num_solver_iterations ! total iterations during the run
       !avg_num_solver_iters

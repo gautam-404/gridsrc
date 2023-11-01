@@ -55,10 +55,10 @@
 
    !## timestep
 
-      !time_step ! timestep in years since previous model
+      time_step ! timestep in years since previous model
       !time_step_sec ! timestep in seconds since previous model
       !time_step_days
-      log_dt ! log10 time_step in years
+      !log_dt ! log10 time_step in years
       !log_dt_sec ! log10 time_step in seconds
       !log_dt_days ! log10 time_step in days
 
@@ -262,8 +262,8 @@
 
       ! log10 total luminosity for reaction categories (Lsun units)
 
-      !pp
-      !cno
+      pp
+      cno
       !tri_alpha
       !c_alpha
       !n_alpha
@@ -435,11 +435,11 @@
 
 !# timescales
 
-      !dynamic_timescale ! dynamic timescale (seconds) -- estimated by 2*pi*sqrt(r^3/(G*m))
-      !kh_timescale ! kelvin-helmholtz timescale (years)
-      !mdot_timescale ! star_mass/abs(star_mdot) (years)
+      dynamic_timescale ! dynamic timescale (seconds) -- estimated by 2*pi*sqrt(r^3/(G*m))
+      kh_timescale ! kelvin-helmholtz timescale (years)
+      mdot_timescale ! star_mass/abs(star_mdot) (years)
       !kh_div_mdot_timescales ! kh_timescale/mdot_timescale
-      !nuc_timescale ! nuclear timescale (years) -- proportional to mass divided by luminosity
+      nuc_timescale ! nuclear timescale (years) -- proportional to mass divided by luminosity
 
       !dt_cell_collapse ! min time for any cell to collapse at current velocities
       !dt_div_dt_cell_collapse
@@ -550,10 +550,10 @@
       ! gravity darkening in rotating stars. Based on the model of Espinosa Lara & Rieutord (2011)
       ! 'polar' refers to the line of sight being directed along the rotation axis of the star
       ! 'equatorial' refers to the line of sight coincident with the stellar equator
-      !grav_dark_L_polar !Lsun 
-      !grav_dark_Teff_polar !K
-      !grav_dark_L_equatorial !Lsun 
-      !grav_dark_Teff_equatorial !K
+      grav_dark_L_polar !Lsun 
+      grav_dark_Teff_polar !K
+      grav_dark_L_equatorial !Lsun 
+      grav_dark_Teff_equatorial !K
 
       !surf_escape_v ! cm/s
 
@@ -569,8 +569,8 @@
       !rotational_mdot_boost ! factor for increase in mass loss mdot due to rotation
       !log_rotational_mdot_boost ! log factor for increase in mass loss mdot due to rotation
       !surf_r_equatorial_div_r_polar
-      !surf_r_equatorial_div_r
-      !surf_r_polar_div_r
+      surf_r_equatorial_div_r
+      surf_r_polar_div_r
 
 !----------------------------------------------------------------------------------------------
 
@@ -734,12 +734,12 @@
 
 !# asteroseismology
 
-      delta_nu ! large frequency separation for p-modes (microHz)
+      !delta_nu ! large frequency separation for p-modes (microHz)
          ! 1e6/(seconds for sound to cross diameter of star)
       !delta_Pg ! g-mode period spacing for l=1 (seconds)
          ! sqrt(2) pi^2/(integral of brunt_N/r dr)
       !log_delta_Pg
-      nu_max ! estimate from scaling relation (microHz)
+      !nu_max ! estimate from scaling relation (microHz)
          ! nu_max = nu_max_sun * M/Msun / ((R/Rsun)^2 (Teff/Teff_sun)^0.5)
          ! with nu_max_sun = 3100 microHz, Teff_sun = 5777
       !nu_max_3_4th_div_delta_nu ! nu_max^0.75/delta_nu
@@ -925,7 +925,7 @@
       !surf_c12_minus_o16 ! this is useful for seeing effects of dredge up on AGB
       !surf_num_c12_div_num_o16
 
-      !phase_of_evolution ! Integer mapping to the type of evolution see star_data/public/star_data_def.inc for definitions
+      phase_of_evolution ! Integer mapping to the type of evolution see star_data/public/star_data_def.inc for definitions
 
    !## MLT++
       !gradT_excess_alpha
