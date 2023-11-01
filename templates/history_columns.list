@@ -118,14 +118,14 @@
       !  mx1_top and mx1_bot are the extent of all kinds of mixing, convective and other.
 
       ! values are m/Mstar
-      conv_mx1_top
-      conv_mx1_bot
-      conv_mx2_top
-      conv_mx2_bot
-      mx1_top
-      mx1_bot
-      mx2_top
-      mx2_bot
+      !conv_mx1_top
+      !conv_mx1_bot
+      !conv_mx2_top
+      !conv_mx2_bot
+      !mx1_top
+      !mx1_bot
+      !mx2_top
+      !mx2_bot
 
       ! radius -- values are radii in Rsun units
       !conv_mx1_top_r
@@ -156,10 +156,13 @@
          ! if the star has too many regions to report them all,
          ! the smallest regions will be merged with neighbors for reporting purposes only.
 
+      mixing_regions 4
 
       !mix_relr_regions <integer>
          ! same as above, but locations given as r/rstar instead of m/mstar.
          ! the columns in the log file will have names like 'mix_relr_type_1' and 'mix_relr_top_1'
+      
+      mix_relr_regions 4
 
 
    !## conditions at base of largest convection zone (by mass)
@@ -300,20 +303,20 @@
       !raw_rate r_h1_h1_wk_h2
       
       !!! pp reaction rates testing !!!
-      raw_rate r_b8_wk_he4_he4                              
-      raw_rate r_be7_pg_b8                                        
+      !raw_rate r_b8_wk_he4_he4                              
+      !raw_rate r_be7_pg_b8                                        
       !raw_rate r_be7_wk_li7                                        
-      raw_rate r_h1_h1_ec_h2                                         
-      raw_rate r_h1_h1_wk_h2                                       
-      raw_rate r_h1_he3_wk_he4                                       
+      !raw_rate r_h1_h1_ec_h2                                         
+      !raw_rate r_h1_h1_wk_h2                                       
+      !raw_rate r_h1_he3_wk_he4                                       
       !raw_rate r_h2_be7_to_h1_he4_he4                                 
       !raw_rate r_h2_h2_to_he4                                       
       !raw_rate r_h2_he3_to_h1_he4                              
-      raw_rate r_h2_pg_he3                                        
-      raw_rate r_he3_ag_be7                                         
+      !raw_rate r_h2_pg_he3                                        
+      !raw_rate r_he3_ag_be7                                         
       !raw_rate r_he3_be7_to_h1_h1_he4_he4                             
-      raw_rate r_he3_he3_to_h1_h1_he4                                    
-      raw_rate r_li7_pa_he4  
+      !raw_rate r_he3_he3_to_h1_h1_he4                                    
+      !raw_rate r_li7_pa_he4  
 
 
 
