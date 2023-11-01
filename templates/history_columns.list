@@ -288,7 +288,7 @@
    
           ! adds columns for all of the reactions that are in the current net 
       ! Note that if using op_split_burn=.true. then zones which have been split will report 0 for thier rates
-      add_raw_rates      ! raw reaction rates,       reactions/second
+      !add_raw_rates      ! raw reaction rates,       reactions/second
       !add_screened_rates ! screened reaction rates reactions/second
       !add_eps_nuc_rates  ! Nuclear energy (minus neutrino losses) released   erg/s
       !add_eps_neu_rates  ! Neutrino losses             erg/s
@@ -302,16 +302,16 @@
       !!! pp reaction rates testing !!!
       raw_rate r_b8_wk_he4_he4                              
       raw_rate r_be7_pg_b8                                        
-      raw_rate r_be7_wk_li7                                        
+      !raw_rate r_be7_wk_li7                                        
       raw_rate r_h1_h1_ec_h2                                         
       raw_rate r_h1_h1_wk_h2                                       
       raw_rate r_h1_he3_wk_he4                                       
-      raw_rate r_h2_be7_to_h1_he4_he4                                 
-      raw_rate r_h2_h2_to_he4                                       
-      raw_rate r_h2_he3_to_h1_he4                              
+      !raw_rate r_h2_be7_to_h1_he4_he4                                 
+      !raw_rate r_h2_h2_to_he4                                       
+      !raw_rate r_h2_he3_to_h1_he4                              
       raw_rate r_h2_pg_he3                                        
       raw_rate r_he3_ag_be7                                         
-      raw_rate r_he3_be7_to_h1_h1_he4_he4                             
+      !raw_rate r_he3_be7_to_h1_h1_he4_he4                             
       raw_rate r_he3_he3_to_h1_h1_he4                                    
       raw_rate r_li7_pa_he4  
 
@@ -383,7 +383,7 @@
 !# information about core and envelope
 
    !## helium core
-      he_core_mass
+      !he_core_mass
       !he_core_radius
       !he_core_lgT
       !he_core_lgRho

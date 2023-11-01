@@ -345,7 +345,7 @@
 !# information about core and envelope
 
    !## helium core
-      he_core_mass
+      !he_core_mass
       !he_core_radius
       !he_core_lgT
       !he_core_lgRho
