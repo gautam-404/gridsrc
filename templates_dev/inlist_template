@@ -50,7 +50,7 @@
 	overshoot_zone_type(1) = 'burn_H'
 	overshoot_zone_loc(1) = 'core'
 	overshoot_bdy_loc(1) = 'top'
-	overshoot_f(1) = 0.0157
+	overshoot_f(1) = 0.017
 	overshoot_f0(1) = 0.002
 
 	! envelope overshoot calibrated to the sun
