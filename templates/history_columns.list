@@ -655,7 +655,7 @@
       ! individual central mass fractions (as many as desired)
       center h1
       center he4
-      !center c12
+      center c12
       !center o16
 
       ! individual log10 central mass fractions (as many as desired)
