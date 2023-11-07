@@ -210,6 +210,7 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
                     os.system(f"rm -rf {archive_path}")
                 except:
                     pass
+            time.sleep(2)
         os.mkdir(archive_path)
         os.mkdir(os.path.join(archive_path, "tracks"))
         os.mkdir(os.path.join(archive_path, "histories"))

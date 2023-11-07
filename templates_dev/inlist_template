@@ -15,7 +15,6 @@
 
 
 &eos
-
 / ! end of eos namelist
 
 
@@ -46,12 +45,25 @@
 
 	! overshooting
 	! These values are from May Pedersen by email
-	overshoot_scheme(1) = 'step'
+	overshoot_scheme(1) = 'exponential'
 	overshoot_zone_type(1) = 'burn_H'
 	overshoot_zone_loc(1) = 'core'
 	overshoot_bdy_loc(1) = 'top'
 	overshoot_f(1) = 0.022
 	overshoot_f0(1) = 0.002
+
+	!! testing
+	!! default = 1e-3
+	! min_overshoot_q = 0.2
+
+	!! Trying step overshoot 
+	! overshoot_scheme(1) = 'step'
+	! overshoot_zone_type(1) = 'burn_H'
+	! overshoot_zone_loc(1) = 'core'
+	! overshoot_bdy_loc(1) = 'top'
+	! overshoot_alpha = 0.2
+	! overshoot_f(1) = 0.022
+	! overshoot_f0(1) = 0.002
 
 	! envelope overshoot calibrated to the sun
 	overshoot_scheme(2) = 'exponential'
