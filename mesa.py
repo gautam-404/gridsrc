@@ -333,7 +333,7 @@ def run_gyre(proj, name, Z, cpu_this_process=1):
                      files=profiles, data_format="GSM", profiles_dir="LOGS",
                     logging=False, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
         with open(f"{name}/run.log", "a+") as f:
-            if res == 0:
+            if res == True:
                 f.write(f"GYRE run complete!\n")
             else:
                 f.write(f"GYRE failed!\n")
