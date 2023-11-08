@@ -166,54 +166,54 @@
 
 
    !## conditions at base of largest convection zone (by mass)
-      !cz_bot_mass ! mass coordinate of base (Msun)
+      cz_bot_mass ! mass coordinate of base (Msun)
       !cz_mass ! mass coordinate of base (Msun) -- same as cz_bot_mass
       !cz_log_xmass ! mass exterior to base (g)
       !cz_log_xmsun ! mass exterior to base (Msun)
       !cz_xm ! mass exterior to base (Msun)
-      !cz_logT
-      !cz_logRho
-      !cz_logP
-      !cz_bot_radius ! Rsun
-      !cz_log_column_depth
-      !cz_log_radial_depth
-      !cz_luminosity ! Lsun
-      !cz_opacity
+      cz_logT
+      cz_logRho
+      cz_logP
+      cz_bot_radius ! Rsun
+      cz_log_column_depth
+      cz_log_radial_depth
+      cz_luminosity ! Lsun
+      cz_opacity
       !cz_log_tau
-      !cz_eta
-      !cz_log_eps_nuc ! log10(ergs/g/s)
-      !cz_t_heat ! Cp*T/eps_nuc (seconds)
+      cz_eta
+      cz_log_eps_nuc ! log10(ergs/g/s)
+      cz_t_heat ! Cp*T/eps_nuc (seconds)
 
       !cz_csound
       !cz_scale_height
       !cz_grav
 
-      !cz_omega
-      !cz_omega_div_omega_crit
+      cz_omega
+      cz_omega_div_omega_crit
 
-      !cz_zone
+      cz_zone
 
       ! mass fractions at base of largest convection zone (by mass)
       !cz_log_xa h1
       !cz_log_xa he4
 
    !## conditions at top of largest convection zone (by mass)
-      !cz_top_mass ! mass coordinate of top (Msun)
+      cz_top_mass ! mass coordinate of top (Msun)
       !cz_top_log_xmass ! mass exterior to top (g)
       !cz_top_log_xmsun ! mass exterior to top (Msun)
-      !cz_top_xm ! mass exterior to top (Msun)
-      !cz_top_logT
-      !cz_top_logRho
-      !cz_top_logP
-      !cz_top_radius ! Rsun
-      !cz_top_log_column_depth
-      !cz_top_log_radial_depth
-      !cz_top_luminosity ! Lsun
-      !cz_top_opacity
+      cz_top_xm ! mass exterior to top (Msun)
+      cz_top_logT
+      cz_top_logRho
+      cz_top_logP
+      cz_top_radius ! Rsun
+      cz_top_log_column_depth
+      cz_top_log_radial_depth
+      cz_top_luminosity ! Lsun
+      cz_top_opacity
       !cz_top_log_tau
-      !cz_top_eta
-      !cz_top_log_eps_nuc ! log10(ergs/g/s)
-      !cz_top_t_heat ! Cp*T/eps_nuc (seconds)
+      cz_top_eta
+      cz_top_log_eps_nuc ! log10(ergs/g/s)
+      cz_top_t_heat ! Cp*T/eps_nuc (seconds)
 
       !cz_top_csound
       !cz_top_scale_height
@@ -222,7 +222,7 @@
       !cz_top_omega
       !cz_top_omega_div_omega_crit
 
-      !cz_top_zone
+      cz_top_zone
       !cz_top_zone_logdq
 
       ! mass fractions at top of largest convection zone (by mass)
