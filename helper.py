@@ -155,8 +155,6 @@ def cwd(path):
         os.chdir(oldpwd)
 
 def archive_LOGS(name, track_index, save_track, gyre, archive_path, tracks_dir="/g/data/qq01/tracks"):
-    # path = os.path.abspath(os.getcwd().split("MESA-grid")[0], "MESA-grid"))
-    # os.chdir(path)
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
@@ -179,6 +177,7 @@ def archive_LOGS(name, track_index, save_track, gyre, archive_path, tracks_dir="
             gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
         except:
             gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GYRE"))
+        
 
         for mesa_file, gyre_file in zip(mesa_profiles, gyre_profiles):
             shutil.copy(mesa_file, profiles_dir)

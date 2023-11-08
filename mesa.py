@@ -64,6 +64,289 @@ def teff_helper(star, retry):
 
 
 
+def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archive_path = "grid_archive",
+               gyre_flag=False, logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
+               uniform_rotation=True, additional_params={}, trace=None, overwrite=False):
+    """
+    dSct star evolution. Testing function. i'th track.
+
+    Parameters
+    ----------
+    name : str
+        Name/Dir to be created by MESA-PORT for the run. Used for archiving. 
+        If two runs have the same name, the second run will overwrite the first.
+    mass : float
+        Initial mass in solar masses
+    metallicity : float
+        Initial metallicity
+    v_surf_init : float
+        Initial surface rotation velocity in km/s
+    param : dict, optional
+        Additional parameters to be set in inlist, by default {}
+    index : int, optional
+        Index of this track. 
+        If index is 0, those inlist files will be saved in the archive 
+        directory for future reference. Index is None by default.
+    archive_path : str, optional
+        Path to archive directory, by default "grid_archive"
+    gyre_flag : bool, optional
+        Run GYRE, by default False
+    logging : bool, optional
+        MESA-PORT logging, by default True
+    parallel : bool, optional
+        MESA-PORT parallel, by default False
+    cpu_this_process : int, optional
+        Number of cores to use per process, by default 1
+    produce_track : bool, optional
+        To produce the track, by default True. 
+        Useful if you want to run GYRE on an existing track.
+    uniform_rotation : bool, optional
+        Uniform rotation, by default True
+    additional_params : dict, optional
+        Additional parameters to be set in inlist, by default {}
+    trace : dict, optional
+        MESA-PORT trace, by default None
+    overwrite : bool, optional
+        Overwrite existing directories, by default False
+    """
+    print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
+    name_og = ''.join(name)
+    os.environ["OMP_NUM_THREADS"] = str(cpu_this_process)
+
+    print(f"Mass: {mass} MSun, Z: {metallicity}, v_init: {v_surf_init} km/s")
+    if param is not None:
+        print(f"Primary test parameters: {param}")
+    if additional_params is not None:
+        print(f"Additional parameters: {additional_params}")
+
+    HOME = os.environ["HOME"]
+    helper.create_grid_dirs(overwrite=overwrite, archive_path=archive_path)
+    os.mkdir(f"{archive_path}/inlists/inlists_{name_og}")
+    try:
+        jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
+        name = os.path.abspath(os.path.join(jobfs, name_og))
+    except KeyError:
+        jobfs = "./gridwork"
+        name = os.path.abspath(os.path.join(jobfs, name_og))
+
+    ## Create working directory
+    proj = ProjectOps(name)   
+    initial_mass = mass
+    Zinit = metallicity
+
+    failed = True   ## Flag to check if the run failed
+    if produce_track:  
+        start_time = time.time()
+        proj.create(overwrite=True) 
+        with open(f"{name}/run.log", "a+") as f:
+            f.write(f"Mass: {mass} MSun, Z: {metallicity}, v_init: {v_surf_init} km/s\n")
+            f.write(f"CPU: {cpu_this_process}\n\n")
+        star = MesaAccess(name)
+        rotation_init_params = {'change_rotation_flag': True,   ## False for rotation off until near zams
+                                'new_rotation_flag': True,
+                                'change_initial_rotation_flag': True,
+                                'set_initial_surface_rotation_v': True,
+                                'set_surface_rotation_v': True,
+                                'new_surface_rotation_v': v_surf_init,
+                                'relax_surface_rotation_v' : True,
+                                'num_steps_to_relax_rotation' : 100,  ## Default value is 100
+                                'relax_omega_max_yrs_dt' : 1.0E-5}   ## Default value is 1.0E9
+        
+        # convergence_helper = {"restore_mesh_on_retry" : True} 
+        # convergence_helper = {"convergence_ignore_equL_residuals" : True}        
+        # convergence_helper = {"steps_before_use_gold_tolerances" : 100, "use_gold_tolerances" : False}  
+        # convergence_helper = {'Pextra_factor' : 2, "steps_before_use_gold_tolerances" : 100, 
+        #                       "use_gold_tolerances" : False, 'scale_max_correction' : 0.1}
+        convergence_helpers = [{"restore_mesh_on_retry" : True}, {"steps_before_use_gold_tolerances" : 100, 
+                                                                  "use_gold_tolerances" : False},
+                                {'Pextra_factor' : 2, "steps_before_use_gold_tolerances" : 100, 
+                                 "use_gold_tolerances" : False, 'scale_max_correction' : 0.1},
+                                 {"convergence_ignore_equL_residuals" : True}]
+        
+        
+        retry = 0
+        total_retries = 4
+        retry_type, terminate_type = None, None
+        failed_phase = None
+        while retry<=total_retries and failed:
+            template_path = "./src/templates_dev"
+            # template_path = "./src/templates"
+            inlist_file = f"{template_path}/inlist_template"
+            star.load_HistoryColumns(f"{template_path}/history_columns.list")
+            star.load_ProfileColumns(f"{template_path}/profile_columns.list")
+            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":4e7}, {"stop_at_phase_TAMS":True}, "ERGB"]
+            max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
+            profile_interval = [1, 1, 1, 5, 5]
+            # max_timestep = [1e4, 1e6, 1e6, 2e6, 1E7]    ## For tests
+            # profile_interval = [1, 5, 5, 5, 5]
+            phases_params = helper.phases_params(initial_mass, Zinit)     
+            phases_names = list(phases_params.keys())
+            if failed_phase is not None:
+                print("Retrying from failed phase: ", failed_phase)
+                phase_idx = phases_names.index(failed_phase)
+                phases_names = phases_names[phase_idx:]
+                stopping_conditions = stopping_conditions[phase_idx:]
+                max_timestep = max_timestep[phase_idx:]
+                profile_interval = profile_interval[phase_idx:]
+            else:
+                proj.clean()
+                proj.make(silent=True)
+            ## Loop over phases, set parameters and run
+            for phase_name in phases_names:
+                try:
+                    ## Run from inlist template by setting parameters for each phase
+                    print(phase_name)
+                    star.load_InlistProject(inlist_file)
+                    star.set(phases_params[phase_name], force=True)
+
+                    ## ADDITIONAL PARAMETERS
+                    if len(param) > 0 and param is not None:
+                        star.set(param, force=True)
+                    if len(additional_params) > 0 and additional_params is not None:
+                        star.set(additional_params, force=True)
+
+                    ## History and profile interval
+                    star.set({'history_interval':1, "profile_interval":profile_interval.pop(0), "max_num_profile_models":3000})
+                    
+                    #Timestep control
+                    star.set({"max_years_for_timestep": max_timestep.pop(0)}, force=True)
+                    
+                    ## Stopping conditions
+                    stopping_condition = stopping_conditions.pop(0)
+                    if  stopping_condition == "ERGB":
+                        ergb_params = {'Teff_lower_limit' : 6000}
+                        star.set(ergb_params, force=True)
+                    else:
+                        star.set(stopping_condition, force=True)
+
+                    ### Checks
+                    if uniform_rotation:
+                        star.set({"set_uniform_am_nu_non_rot": uniform_rotation}, force=True)
+                    else:
+                        star.set({"set_uniform_am_nu_non_rot": uniform_rotation}, force=True)
+                    if retry > 0:
+                        if "delta_lgTeff" in retry_type:
+                            teff_helper(star, retry)
+
+                    
+                    if retry > 0 and "residual" in retry_type and phase_name == failed_phase:
+                        if len(convergence_helpers[retry-1]) > 0:
+                            star.set(convergence_helpers[retry-1], force=True)
+
+                    #### RUN ####
+                    ## proj.run() for first run, proj.resume() for subsequent runs
+                    ## These raise exceptions if the run fails and return termination code + age otherwise
+                    if phase_name == "Create Pre-MS Model":
+                        ## Initiate rotation
+                        if v_surf_init>0:
+                            star.set(rotation_init_params, force=True)
+                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
+                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                        ## Initial/Pre-MS run
+                        termination_code, age = proj.run(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
+                        print(f"End age: {age:.2e} yrs")
+                        print(f"Termination code: {termination_code}\n")
+                    elif phase_name == "Pre-MS Evolution":
+                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
+                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                        ## Resume
+                        termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
+                        print(f"End age: {age:.2e} yrs")
+                        print(f"Termination code: {termination_code}\n")
+                    elif phase_name == "Early MS Evolution":
+                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
+                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                        ## Resume 
+                        termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
+                        print(f"End age: {age:.2e} yrs")
+                        print(f"Termination code: {termination_code}\n")
+                        failed = False
+                        break
+                except Exception as e:
+                    failed = True
+                    print(e)
+                    retry_type, terminate_type = helper.read_error(name)
+                    break
+                except KeyboardInterrupt:
+                    raise KeyboardInterrupt
+                else:
+                    failed = False
+            if failed:
+                retry += 1
+                with open(f"{name}/run.log", "a+") as f:
+                    if "photo does not exist" in terminate_type:
+                        f.write(f"\"Photo does not exist. Exiting.\"\n")
+                        break
+                    elif "ERROR" in terminate_type:
+                        f.write(f"\"ERROR\" encountered\n")
+                        break
+                    if retry == total_retries:
+                        f.write(f"Max retries reached. Model skipped!\n")
+                        break
+                    f.write(f"\nMass: {mass} MSun, Z: {metallicity}, v_init: {v_surf_init} km/s\n")
+                    f.write(f"Failed at phase: {phase_name}\n")
+                    failed_phase = phase_name
+                    f.write(f"Terminate type: {terminate_type}\n")
+                    f.write(f"Retry type: {retry_type}\n")
+                    if "delta_lgTeff" in retry_type:
+                        f.write(f"Retrying with \"T_eff helper\"\n")
+                    else:
+                        f.write(f"Retrying with \"convergence helper\": {convergence_helpers[0]}\n")
+        end_time = time.time()
+        with open(f"{name}/run.log", "a+") as f:
+            f.write(f"Total time: {end_time-start_time} s\n\n")
+        if failed:
+            shutil.copy(f"{name}/run.log", archive_path+f"/failed/run_{name_og}.log")
+    else:
+        failed = False
+
+    if not failed:
+        if gyre_flag:   
+            try:
+                res = run_gyre(proj, name, Zinit, cpu_this_process=cpu_this_process)
+                res = True if res == 0 else False
+            except Exception as e:
+                print("Gyre failed for track ", name_og)
+                print(e)
+        shutil.copy(f"{name}/run.log", archive_path+f"/runlogs/run_{name_og}.log")
+        try:
+            print("Archiving LOGS...")
+            helper.archive_LOGS(name, name_og, True, (gyre_flag and res), archive_path)
+        except Exception as e:
+            print("Archiving failed for track ", name_og)
+            print(e)
+            print("Archiving LOGS...")
+            helper.archive_LOGS(name, name_og, False, False, archive_path)
+        with open(archive_path+f"/runlogs/run_{name_og}.log", "a+") as f:
+            f.write(f"LOGS archived!\n")
+
+
+def run_gyre(proj, name, Z, cpu_this_process=1):
+    start_time = time.time()
+    print("[bold green]Running GYRE...[/bold green]")
+    os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
+    os.environ['OMP_NUM_THREADS'] = '1'
+    profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format="GSM")
+    if len(profiles) > 0:
+        profiles = [profile.split('/')[-1] for profile in profiles]
+        res = proj.runGyre(gyre_in=os.path.expanduser("./src/templates/gyre_rot_template_ell3.in"), 
+                     files=profiles, data_format="GSM", profiles_dir="LOGS",
+                    logging=False, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
+        with open(f"{name}/run.log", "a+") as f:
+            if res == 0:
+                f.write(f"GYRE run complete!\n")
+            else:
+                f.write(f"GYRE failed!\n")
+    else:
+        with open(f"{name}/run.log", "a+") as f:
+            f.write(f"GYRE skipped: no profiles found, possibly because all models had T_eff < 6000 K\n")
+    end_time = time.time()
+    with open(f"{name}/gyre.log", "a+") as f:
+        f.write(f"Total time: {end_time-start_time} s\n\n")
+    return res
+
+
+
 # def evo_star(args, **kwargs):
 def evo_star(args):
     '''
