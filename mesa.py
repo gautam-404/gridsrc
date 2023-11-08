@@ -308,7 +308,9 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             except Exception as e:
                 print("Gyre failed for track ", name_og)
                 print(e)
+            shutil.copy(f"{name}/gyre.log", archive_path+f"/gyre/gyre_{name_og}.log")
         shutil.copy(f"{name}/run.log", archive_path+f"/runlogs/run_{name_og}.log")
+        
         try:
             print("Archiving LOGS...")
             helper.archive_LOGS(name, name_og, True, (gyre_flag and res), archive_path)
@@ -320,20 +322,21 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         with open(archive_path+f"/runlogs/run_{name_og}.log", "a+") as f:
             f.write(f"LOGS archived!\n")
 
-
 def run_gyre(proj, name, Z, cpu_this_process=1):
     start_time = time.time()
     print("[bold green]Running GYRE...[/bold green]")
     os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
     os.environ['OMP_NUM_THREADS'] = '1'
     profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format="GSM")
+    if len(profiles) == 0:
+        profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format="GYRE")
     if len(profiles) > 0:
         profiles = [profile.split('/')[-1] for profile in profiles]
         res = proj.runGyre(gyre_in=os.path.expanduser("./src/templates/gyre_rot_template_ell3.in"), 
                      files=profiles, data_format="GSM", profiles_dir="LOGS",
-                    logging=False, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
+                    logging=True, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
         with open(f"{name}/run.log", "a+") as f:
-            if res == True:
+            if res == 0:
                 f.write(f"GYRE run complete!\n")
             else:
                 f.write(f"GYRE failed!\n")
