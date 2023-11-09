@@ -53,7 +53,7 @@ def get_gyre_params_archived(track_index, grid_archive, profiles_archive, file_f
         # profile_file = f"{name}/LOGS/profile{p}.data.{file_format}"
         profile_file = os.path.join(profiles_archive, f"profile{p}.data.{file_format}")
         if zinit == None:
-            pd.read_csv(profile_file, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
+            zinit = pd.read_csv(profile_file, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
             
         ###Checks###
         # if not os.path.exists(profile_file):
@@ -80,6 +80,84 @@ def get_gyre_params_archived(track_index, grid_archive, profiles_archive, file_f
             else:
                 freq_max = 95
         profiles.append(profile_file)
+        gyre_input_params.append({"freq_min": freq_min, "freq_max": freq_max, "diff_scheme": diff_scheme})
+    return profiles, gyre_input_params
+
+
+def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
+    '''
+    Compute the GYRE input parameters for a given MESA model.
+
+    Parameters
+    ----------
+    name : str
+        Name of the MESA model.
+    zinit : float, optional
+        Initial metallicity of the MESA model. The default is None. If None, the metallicity is read from the MESA model.
+    run_on_cool : bool, optional
+        If True, run GYRE on all models, regardless of temperature. The default is False.
+    file_format : str, optional
+        File format of the MESA model. The default is "GYRE".
+    
+    Returns
+    -------
+    profiles : list
+        List of MESA profile files to be run with GYRE.
+    gyre_input_params : list
+    '''
+    archive_name= os.path.abspath(archive_name)
+    if suffix == None:
+        histfile = f"{archive_name}/histories/history.data"
+        pindexfile = f"{archive_name}/profile_indexes/profiles.index"
+    else:
+        histfile = f"{archive_name}/histories/history_{suffix}.data"
+        pindexfile = f"{archive_name}/profile_indexes/profiles_{suffix}.index"
+    h = pd.read_csv(histfile, delim_whitespace=True, skiprows=5)
+    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
+    h = pd.merge(h, p, on='model_number', how='right')
+    h["Zfrac"] = 1 - h["average_h1"] - h["average_he4"]
+    h["Myr"] = h["star_age"]*1.0E-6
+    h["density"] = h["star_mass"]/np.power(10,h["log_R"])**3
+    gyre_start_age = 2.0E6
+    gyre_intake = h.query(f"Myr > {gyre_start_age/1.0E6}")
+    profiles = []
+    gyre_input_params = []
+    for i,row in gyre_intake.iterrows():
+        p = int(row["profile_number"])
+        if suffix == None:
+            mesa_profile = f"{archive_name}/LOGS/profile{p}.data"
+            gyre_profile = f"{archive_name}/LOGS/profile{p}.data.{file_format}"
+        else:
+            mesa_profile = f"{archive_name}/profiles/profiles_{suffix}/profile{p}.data"
+            gyre_profile = f"{archive_name}/profiles/profiles_{suffix}/profile{p}.data.{file_format}"
+        if zinit == None:
+            zinit = pd.read_csv(mesa_profile, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
+            
+        ###Checks###
+        # if not os.path.exists(profile_file):
+        #     raise FileNotFoundError("Profile not found. Possible file format mismatch")
+        # if row["log_Teff"] < 3.778 and not run_on_cool:
+        #     continue
+        ############
+
+        if row["Myr"] > 40:
+            diff_scheme = "COLLOC_GL2"
+        else:
+            diff_scheme = "MAGNUS_GL2"
+        try:
+            muhz_to_cd = 86400/1.0E6
+            mesa_dnu = row["delta_nu"]
+            dnu = mesa_dnu * muhz_to_cd
+            freq_min = int(1.5 * dnu)
+            freq_max = int(12 * dnu)
+        except:
+            dnu = None
+            freq_min = 15
+            if zinit < 0.003:
+                freq_max = 150
+            else:
+                freq_max = 95
+        profiles.append(gyre_profile)
         gyre_input_params.append({"freq_min": freq_min, "freq_max": freq_max, "diff_scheme": diff_scheme})
     return profiles, gyre_input_params
 
@@ -121,7 +199,7 @@ def get_gyre_params(name, zinit=None, run_on_cool=False, file_format="GYRE"):
         p = int(row["profile_number"])
         profile_file = f"{name}/LOGS/profile{p}.data.{file_format}"
         if zinit == None:
-            pd.read_csv(profile_file, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
+            zinit = pd.read_csv(profile_file, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
             
         ###Checks###
         # if not os.path.exists(profile_file):

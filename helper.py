@@ -173,16 +173,14 @@ def archive_LOGS(name, track_index, save_track, gyre, archive_path, tracks_dir="
             os.mkdir(profiles_dir)
 
         mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
-        try:
-            gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
-        except:
+        gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
+        if len(gyre_profiles) == 0:
             gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GYRE"))
-        else:
-            pass
-
-        for mesa_file, gyre_file in zip(mesa_profiles, gyre_profiles):
+        
+        for mesa_file in mesa_profiles:
             shutil.copy(mesa_file, profiles_dir)
-            if len(gyre_profiles) > 0:
+        if len(gyre_profiles) > 0:
+            for gyre_file in gyre_profiles:
                 shutil.copy(gyre_file, profiles_dir)
         with tarfile.open(f"{profiles_dir}.tar.gz", "w:gz") as tarhandle:
             tarhandle.add(profiles_dir, arcname=os.path.basename(profiles_dir))
