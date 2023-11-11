@@ -188,32 +188,21 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
     '''
     ## Create archive directories
     if overwrite:
-        if os.path.exists(archive_path):
+        for i in range(5):
             try:
                 shutil.rmtree(archive_path)
+                os.system(f"rm -rf {archive_path}")
+                break
             except:
-                try:
-                    os.system(f"rm -rf {archive_path}")
-                except:
-                    pass
-            time.sleep(2)
+                pass
         os.mkdir(archive_path)
-        os.mkdir(os.path.join(archive_path, "tracks"))
-        os.mkdir(os.path.join(archive_path, "histories"))
-        os.mkdir(os.path.join(archive_path, "profile_indexes"))
-        os.mkdir(os.path.join(archive_path, "profiles"))
-        os.mkdir(os.path.join(archive_path, "gyre"))
-        os.mkdir(os.path.join(archive_path, "failed"))
-        os.mkdir(os.path.join(archive_path, "runlogs"))
-        os.mkdir(os.path.join(archive_path, "inlists"))
+        for dir_ in ["tracks", "histories", "profile_indexes", "profiles", "gyre", "failed", "runlogs", "inlists"]:
+            os.mkdir(os.path.join(archive_path, dir_))
     else:
         if not os.path.exists(archive_path):
             os.mkdir(archive_path)
-            os.mkdir(os.path.join(archive_path, "tracks"))
-            os.mkdir(os.path.join(archive_path, "histories"))
-            os.mkdir(os.path.join(archive_path, "profile_indexes"))
-            os.mkdir(os.path.join(archive_path, "profiles"))
-            os.mkdir(os.path.join(archive_path, "gyre"))
-            os.mkdir(os.path.join(archive_path, "failed"))
-            os.mkdir(os.path.join(archive_path, "runlogs"))
-            os.mkdir(os.path.join(archive_path, "inlists"))
+            for dir_ in ["tracks", "histories", "profile_indexes", "profiles", "gyre", "failed", "runlogs", "inlists"]:
+                if not os.path.exists(os.path.join(archive_path, dir_)):
+                    os.mkdir(os.path.join(archive_path, dir_))
+
+    
