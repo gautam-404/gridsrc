@@ -100,7 +100,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
 
     failed = True   ## Flag to check if the run failed
     if produce_track and not check_if_done(name_og, archive_path):
-        os.mkdir(f"{archive_path}/inlists/inlists_{name_og}")
+        if not os.path.exists(f"{archive_path}/inlists/inlists_{name_og}"):
+            os.mkdir(f"{archive_path}/inlists/inlists_{name_og}")
         start_time = time.time()
         proj.create(overwrite=True) 
         with open(f"{name}/run.log", "a+") as f:
