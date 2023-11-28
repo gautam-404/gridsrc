@@ -138,12 +138,11 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
-            # stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":4e7}, {"stop_at_phase_TAMS":True}, "ERGB"]
             stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":4e7}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
             max_timestep = [1e4, 1e6, 1e6, 2e6, 1E7]    ## For tests
-            profile_interval = [1, 5, 5, 5, 5]
+            profile_interval = [1, 3, 3, 5, 5]
             phases_params = helper.phases_params(initial_mass, Zinit)     
             phases_names = list(phases_params.keys())
             if failed_phase is not None:
@@ -171,7 +170,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                         star.set(additional_params, force=True)
 
                     ## History and profile interval
-                    star.set({'history_interval':1, "profile_interval":profile_interval.pop(0), "max_num_profile_models":3000})
+                    star.set({'history_interval':1, "profile_interval":profile_interval.pop(0), "max_num_profile_models":6000})
                     
                     #Timestep control
                     star.set({"max_years_for_timestep": max_timestep.pop(0)}, force=True)
