@@ -99,7 +99,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
     Zinit = metallicity
 
     failed = True   ## Flag to check if the run failed
-    if produce_track and not check_if_done(name_og, archive_path):
+    previously_done = check_if_done(name_og, archive_path)
+    if produce_track and not previously_done:
         if not os.path.exists(f"{archive_path}/inlists/inlists_{name_og}"):
             os.mkdir(f"{archive_path}/inlists/inlists_{name_og}")
         start_time = time.time()
@@ -268,7 +269,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
     else:
         failed = False
 
-    if not failed:
+    if not failed and not previously_done:
         if gyre_flag:   
             try:
                 res = run_gyre(proj, name, Zinit, cpu_this_process=cpu_this_process)
