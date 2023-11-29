@@ -68,9 +68,9 @@ def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=
     h["Myr"] = h["star_age"]*1.0E-6
     h["density"] = h["star_mass"]/np.power(10,h["log_R"])**3
     p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
-    h = pd.merge(h, p, on='model_number', how='right')
-    gyre_start_age = 2.0E6
-    gyre_intake = h.query(f"Myr > {gyre_start_age/1.0E6}")
+    h = pd.merge(h, p, on='model_number', how='inner')
+    gyre_start_age = 1e6
+    gyre_intake = h.query(f"Myr > {gyre_start_age/1e6}")
     profiles = []
     gyre_input_params = []
     for i,row in gyre_intake.iterrows():
