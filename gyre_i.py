@@ -109,7 +109,12 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     '''
     Save the GYRE outputs to a tarball in the archive directory.
     '''
-    shutil.copy(f"{profiles_dir}/gyre.log", f"{archive_dir}/gyre/gyre_{suffix}.log")
+    try: 
+        shutil.copy(f"{profiles_dir}/gyre.log", f"{archive_dir}/gyre/gyre_{suffix}.log")
+        print("Copied GYRE log file")
+    except Exception as e:
+        print(e)
+        print("Failed to copy GYRE log file")
     freq_files = glob.glob(f"{profiles_dir}/*-freqs.dat")
     if len(freq_files) > 0:
         with tarfile.open(f"{archive_dir}/gyre/freqs_{suffix}.tar.gz", "w:gz") as tar:
