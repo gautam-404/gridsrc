@@ -1,7 +1,6 @@
 import subprocess
 import os, psutil
 
-from ray.util.multiprocessing import Pool as RayPool
 from multiprocessing.pool import Pool as MPool
 from ray.runtime_env import RuntimeEnv
 from rich import progress, print, console
@@ -25,7 +24,8 @@ def ray_pool(func, args, length, cpu_per_process=16, config={"cores" : None}, in
     config : dict, optional
         Dictionary of configuration parameters. The default is {"cores" : None}.
     '''
-    import ray   
+    import ray  
+    from ray.util.multiprocessing import Pool as RayPool 
     try:
         ray.init(address="auto")
     except:
