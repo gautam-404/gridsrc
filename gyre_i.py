@@ -26,7 +26,7 @@ def untar_profiles(profile_tar, jobfs=None):
         try:
             jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
         except KeyError:
-            jobfs = "./gridwork"
+            jobfs = jobfs = os.path.abspath("./gridwork")
     elif os.path.exists(jobfs):
         jobfs = os.path.abspath(jobfs)
     else:
