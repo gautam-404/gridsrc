@@ -23,8 +23,10 @@ def check_if_done(name_og, archive_path):
     history_present = os.path.exists(archive_path+f"/histories/history_{name_og}.data")
     failed = os.path.exists(archive_path+f"/failed/run_{name_og}.log")
     if runlog_present and profiles_archived and history_present and not failed:
+        print(f"Track {name_og} already done. Skipping...")
         return True
     else:
+        print(f"Track {name_og} not previously done. Running...")
         return False
 
 def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archive_path = "grid_archive",

@@ -26,10 +26,10 @@ def untar_profiles(profile_tar, jobfs=None):
         try:
             jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
         except KeyError:
-            jobfs = jobfs = os.path.abspath("./gridwork")
+            jobfs = os.path.abspath("./gridwork")
     elif os.path.exists(jobfs):
         jobfs = os.path.abspath(jobfs)
-    else:
+    if not os.path.exists(jobfs):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
     with tarfile.open(profile_tar, 'r:gz') as tar:
         tar.extractall(path=jobfs)
@@ -56,7 +56,7 @@ def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=
         List of MESA profile files to be run with GYRE.
     gyre_input_params : list
     '''
-    archive_name= os.path.abspath(archive_name)
+    archive_name = os.path.abspath(archive_name)
     if suffix == None:
         histfile = f"{archive_name}/histories/history.data"
         pindexfile = f"{archive_name}/profile_indexes/profiles.index"
@@ -127,11 +127,11 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
     '''
     Run GYRE on a given archive with MESA profiles.
     '''
-    print(f"Running GYRE on {archive_dir}\n")
     archive_dir = os.path.abspath(archive_dir)
     input_file = os.path.join(archive_dir, "track_inputs.csv")
     inputs = pd.read_csv(input_file)
     track = inputs.iloc[index]['track']
+    print(f"Running GYRE for track {track}\n")
     if check_if_done(archive_dir, index):
         print("GYRE already run on this archive\n")
     else:
