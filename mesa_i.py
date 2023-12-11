@@ -78,6 +78,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
     name_og = ''.join(name)
     archive_path = os.path.abspath(archive_path)
     os.environ["OMP_NUM_THREADS"] = str(cpu_this_process)
+    os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
     print(f"Mass: {mass} MSun, Z: {metallicity}, v_init: {v_surf_init} km/s")
     if param is not None:
@@ -92,8 +93,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
         name = os.path.abspath(os.path.join(jobfs, name_og))
     except KeyError:
-        jobfs = "./gridwork"
-        name = os.path.abspath(os.path.join(jobfs, name_og))
+        jobfs = os.path.abspath("./gridwork")
+        name = os.path.join(jobfs, name_og)
 
     ## Create working directory
     proj = ProjectOps(name)   
@@ -138,8 +139,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         retry_type, terminate_type = None, None
         failed_phase = None
         while retry<=total_retries and failed:
-            template_path = "./src/templates_dev"
-            # template_path = "./src/templates"
+            # template_path = "./src/templates_dev"
+            template_path = "./src/templates"
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
@@ -150,16 +151,16 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             profile_interval = [1, 3, 3, 5, 5]
             phases_params = helper.phases_params(initial_mass, Zinit)     
             phases_names = list(phases_params.keys())
-            if failed_phase is not None:
+            if failed_phase is None or failed_phase == "Create Pre-MS Model":
+                proj.clean()
+                proj.make(silent=True)
+            else:
                 print("Retrying from failed phase: ", failed_phase)
                 phase_idx = phases_names.index(failed_phase)
                 phases_names = phases_names[phase_idx:]
                 stopping_conditions = stopping_conditions[phase_idx:]
                 max_timestep = max_timestep[phase_idx:]
                 profile_interval = profile_interval[phase_idx:]
-            else:
-                proj.clean()
-                proj.make(silent=True)
             ## Loop over phases, set parameters and run
             for phase_name in phases_names:
                 try:
