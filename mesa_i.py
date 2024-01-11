@@ -29,7 +29,7 @@ def check_if_done(name_og, archive_path):
         print(f"Track {name_og} not previously done. Running...")
         return False
 
-def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archive_path = "grid_archive",
+def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archive_path="grid_archive",
                gyre_flag=False, logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
                uniform_rotation=True, additional_params={}, trace=None, overwrite=False):
     """
@@ -93,7 +93,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
         name = os.path.abspath(os.path.join(jobfs, name_og))
     except KeyError:
-        jobfs = os.path.abspath("./gridwork")
+        grid_name = archive_path.split('/')[-1].split('grid_archive_')[-1]
+        jobfs = os.path.abspath(f"./gridwork_{grid_name}")
         name = os.path.join(jobfs, name_og)
 
     ## Create working directory
@@ -122,11 +123,6 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                                 'num_steps_to_relax_rotation' : 100,  ## Default value is 100
                                 'relax_omega_max_yrs_dt' : 1.0E-5}   ## Default value is 1.0E9
         
-        # convergence_helper = {"restore_mesh_on_retry" : True} 
-        # convergence_helper = {"convergence_ignore_equL_residuals" : True}        
-        # convergence_helper = {"steps_before_use_gold_tolerances" : 100, "use_gold_tolerances" : False}  
-        # convergence_helper = {'Pextra_factor' : 2, "steps_before_use_gold_tolerances" : 100, 
-        #                       "use_gold_tolerances" : False, 'scale_max_correction' : 0.1}
         convergence_helpers = [{"restore_mesh_on_retry" : True}, {"steps_before_use_gold_tolerances" : 100, 
                                                                   "use_gold_tolerances" : False},
                                 {'Pextra_factor' : 2, "steps_before_use_gold_tolerances" : 100, 
@@ -325,95 +321,3 @@ def run_gyre(proj, name, Z, cpu_this_process=1):
     with open(f"{name}/gyre.log", "a+") as f:
         f.write(f"Total time: {end_time-start_time} s\n\n")
     return res
-
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Run parameter tests for MESA",
-                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", "--index", type=int, default=0, 
-                        help="Index of the parameter set to run")
-    parser.add_argument("-c", "--cores", type=int, default=1, 
-                        help="Number of cores to use per process")
-    parser.add_argument("-o", "--overwrite", action="store_true",
-                        help="Overwrite existing directories")
-    parser.add_argument("-d", "--directory", type=str, default="grid_archive",
-                        help="Name of the directory to save outputs")
-    args = parser.parse_args()
-    config = vars(args)
-    index = config["index"]
-    cpu_per_process = config["cores"]
-    overwrite = config["overwrite"]
-    archive_dir = config["directory"]
-
-    if index == 0 and overwrite:
-        overwrite = True
-    else:
-        overwrite = False
-
-    rewrite_input_file = True
-    if index == 0 and rewrite_input_file:
-        M_sample = [1.96, 1.98, 2.0, 2.2]
-        # M_sample = [1.2, 1.4, 1.6, 1.8, 2.0, 2.2]
-        # M_sample = [1.52]
-        # Z_sample = [0.008]
-        Z_sample = [0.014, 0.015, 0.016, 0.017, 0.018]
-        # Z_sample = [0.002, 0.006, 0.01, 0.014, 0.018, 0.022, 0.026]
-        V_sample = [8]
-        # param_samples = [{'overshoot_f(1)':0.045, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.055, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.065, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.075, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.085, 'overshoot_f0(1)':0.005}]
-        param_samples = [{'overshoot_f(1)':0.017, 'overshoot_f0(1)':0.002},
-                            {'overshoot_f(1)':0.022, 'overshoot_f0(1)':0.002},
-                            {'overshoot_f(1)':0.027, 'overshoot_f0(1)':0.002},
-                            {'overshoot_f(1)':0.032, 'overshoot_f0(1)':0.002}]
-        # param_samples = param_samples.ov_samples
-        combinations = list(product(M_sample, Z_sample, V_sample, param_samples))
-        # print("Number of combinations: ", len(combinations))
-        # exit()
-        
-
-        M = []
-        Z = []
-        V = []
-        params = []
-        names = []
-        for i, (m, z, v, param) in enumerate(combinations):
-            M.append(m)
-            Z.append(z)
-            V.append(v)
-            if param is not None:
-                params.append(param)
-                names.append(f"m{m}_z{z}_v{v}_param{param_samples.index(param)}")
-            else:
-                names.append(f"m{m}_z{z}_v{v}")
-
-        df = pd.DataFrame({"track": names, "M": M, "Z": Z, "V": V, "param": params}) if len(params)>0 else pd.DataFrame({"track": names, "M": M, "Z": Z, "V": V})
-        df.to_csv('track_inputs.csv', index=False)
-    df = pd.read_csv('track_inputs.csv')
-    name = df["track"].loc[index]
-    M = float(df["M"].loc[index])
-    Z = float(df["Z"].loc[index])
-    V = float(df["V"].loc[index])
-    param = eval(df["param"].loc[index]) if 'param' in df.columns else {}
-
-    additional_params = {}
-    # additional_params = {}
-
-    trace = ['surf_avg_v_rot', 'surf_avg_omega_div_omega_crit', 
-            'log_total_angular_momentum',
-            'surf_escape_v', 'log_g', 'log_R', 'star_mass']
-
-    evo_star_i(name=name, mass=M, metallicity=Z, v_surf_init=V, param=param, 
-               index=index, gyre_flag=False, logging=True, overwrite=overwrite,
-               parallel=False, cpu_this_process=cpu_per_process, trace=trace,
-               produce_track=True, uniform_rotation=True, additional_params=additional_params, archive_path=archive_dir)
-    
-    if index == 0:
-        shutil.copy("track_inputs.csv", archive_dir)
-
-    print("Done!")
-
-
