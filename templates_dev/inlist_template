@@ -1,8 +1,8 @@
 &star_job
 
 	! output
-	history_columns_file = 'history_columns.list'
-	profile_columns_file = 'profile_columns.list'
+	! history_columns_file = 'history_columns.list'
+	! profile_columns_file = 'profile_columns.list'
 	pgstar_flag = .false.    ! (dont) display on-screen plots
 
 	save_photo_when_terminate = .true.
@@ -86,7 +86,7 @@
 	terminal_interval = 10
 	write_profiles_flag = .true. 
 	write_pulse_data_with_profile = .true.
-	pulse_data_format = 'GSM'
+	pulse_data_format = 'osc'
 	add_atmosphere_to_pulse_data = .true.
 	profile_data_prefix = 'profile'
 	profiles_index_name = 'profiles.index'
