@@ -57,6 +57,12 @@
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
+         extras_startup = 0
+         if (.not. restart) then
+            call alloc_extra_info(s)
+         else ! it is a restart
+            call unpack_extra_info(s)
+         end if
       end subroutine extras_startup
       
 
@@ -76,6 +82,8 @@
          integer, intent(in) :: id
          integer :: ierr
          type (star_info), pointer :: s
+         real(dp) :: min_center_h1_for_diff
+         real(dp), parameter :: huge_dt_limit = 3.15d16 ! ~1 Gyr
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
@@ -87,6 +95,26 @@
             return
          end if
 
+         ! define STOPPING CRITERION: log_Teff_lower_limit = 4.2
+         ! if ((s% center_h1 < 1d-4) .and. (safe_log10(s% Teff) < 4.2)) then
+         !    termination_code_str(t_xtra1) = 'log_Teff below 4.2'
+         !    s% termination_code = t_xtra1
+         !    extras_check_model = terminate
+         ! end if
+
+         ! check DIFFUSION: to determine whether or not diffusion should happen
+         ! no diffusion for fully convective, post-MS, and mega-old models 
+         s% diffusion_dt_limit = 3.15d7
+         if(abs(s% mass_conv_core - s% star_mass) < 1d-2) then ! => fully convective
+            s% diffusion_dt_limit = huge_dt_limit
+         end if
+         if (s% star_age > 5d10) then !50 Gyr is really old
+            s% diffusion_dt_limit = huge_dt_limit
+         end if
+         min_center_h1_for_diff = 1d-10
+         if (s% center_h1 < min_center_h1_for_diff) then
+            s% diffusion_dt_limit = huge_dt_limit
+         end if
 
          ! if you want to check multiple conditions, it can be useful
          ! to set a different termination code depending on which
@@ -97,7 +125,7 @@
          ! termination_code_str(t_xtra1) = 'my termination condition'
 
          ! by default, indicate where (in the code) MESA terminated
-         if (extras_check_model == terminate) s% termination_code = t_extras_check_model
+         ! if (extras_check_model == terminate) s% termination_code = t_extras_check_model
       end function extras_check_model
 
 
@@ -268,69 +296,69 @@
             vals(k,7) = star_interp_val_to_pt(s% chiT,k,s% nz,s% dq,'chiT_face')
          end do
       
-      if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
+         ! if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
+         !    call make_osc(id, n, nz, names, ierr)
+         ! end if
          call make_osc(id, n, nz, names, ierr)
-      end if
-
       end subroutine data_for_extra_profile_columns
 
 
-      integer function how_many_extra_history_header_items(id)
-         integer, intent(in) :: id
-         integer :: ierr
-         type (star_info), pointer :: s
-         ierr = 0
-         call star_ptr(id, s, ierr)
-         if (ierr /= 0) return
-         how_many_extra_history_header_items = 0
-      end function how_many_extra_history_header_items
+      ! integer function how_many_extra_history_header_items(id)
+      !    integer, intent(in) :: id
+      !    integer :: ierr
+      !    type (star_info), pointer :: s
+      !    ierr = 0
+      !    call star_ptr(id, s, ierr)
+      !    if (ierr /= 0) return
+      !    how_many_extra_history_header_items = 0
+      ! end function how_many_extra_history_header_items
 
 
-      subroutine data_for_extra_history_header_items(id, n, names, vals, ierr)
-         integer, intent(in) :: id, n
-         character (len=maxlen_history_column_name) :: names(n)
-         real(dp) :: vals(n)
-         type(star_info), pointer :: s
-         integer, intent(out) :: ierr
-         ierr = 0
-         call star_ptr(id,s,ierr)
-         if(ierr/=0) return
+      ! subroutine data_for_extra_history_header_items(id, n, names, vals, ierr)
+      !    integer, intent(in) :: id, n
+      !    character (len=maxlen_history_column_name) :: names(n)
+      !    real(dp) :: vals(n)
+      !    type(star_info), pointer :: s
+      !    integer, intent(out) :: ierr
+      !    ierr = 0
+      !    call star_ptr(id,s,ierr)
+      !    if(ierr/=0) return
 
-         ! here is an example for adding an extra history header item
-         ! also set how_many_extra_history_header_items
-         ! names(1) = 'mixing_length_alpha'
-         ! vals(1) = s% mixing_length_alpha
+      !    ! here is an example for adding an extra history header item
+      !    ! also set how_many_extra_history_header_items
+      !    ! names(1) = 'mixing_length_alpha'
+      !    ! vals(1) = s% mixing_length_alpha
 
-      end subroutine data_for_extra_history_header_items
-
-
-      integer function how_many_extra_profile_header_items(id)
-         integer, intent(in) :: id
-         integer :: ierr
-         type (star_info), pointer :: s
-         ierr = 0
-         call star_ptr(id, s, ierr)
-         if (ierr /= 0) return
-         how_many_extra_profile_header_items = 0
-      end function how_many_extra_profile_header_items
+      ! end subroutine data_for_extra_history_header_items
 
 
-      subroutine data_for_extra_profile_header_items(id, n, names, vals, ierr)
-         integer, intent(in) :: id, n
-         character (len=maxlen_profile_column_name) :: names(n)
-         real(dp) :: vals(n)
-         type(star_info), pointer :: s
-         integer, intent(out) :: ierr
-         ierr = 0
-         call star_ptr(id,s,ierr)
-         if(ierr/=0) return
+      ! integer function how_many_extra_profile_header_items(id)
+      !    integer, intent(in) :: id
+      !    integer :: ierr
+      !    type (star_info), pointer :: s
+      !    ierr = 0
+      !    call star_ptr(id, s, ierr)
+      !    if (ierr /= 0) return
+      !    how_many_extra_profile_header_items = 0
+      ! end function how_many_extra_profile_header_items
 
-         ! here is an example for adding an extra profile header item
-         ! also set how_many_extra_profile_header_items
-         ! names(1) = 'mixing_length_alpha'
-         ! vals(1) = s% mixing_length_alpha
 
-      end subroutine data_for_extra_profile_header_items
+      ! subroutine data_for_extra_profile_header_items(id, n, names, vals, ierr)
+      !    integer, intent(in) :: id, n
+      !    character (len=maxlen_profile_column_name) :: names(n)
+      !    real(dp) :: vals(n)
+      !    type(star_info), pointer :: s
+      !    integer, intent(out) :: ierr
+      !    ierr = 0
+      !    call star_ptr(id,s,ierr)
+      !    if(ierr/=0) return
+
+      !    ! here is an example for adding an extra profile header item
+      !    ! also set how_many_extra_profile_header_items
+      !    ! names(1) = 'mixing_length_alpha'
+      !    ! vals(1) = s% mixing_length_alpha
+
+      ! end subroutine data_for_extra_profile_header_items
 
 
       ! returns either keep_going or terminate.
@@ -474,112 +502,112 @@
       
       subroutine make_osc(id, n, nz, names, ierr)
          ! Create osc files. Based on P. Walczak's code.
-      use star_def, only: star_info
-      use const_def, only: dp
+         use star_def, only: star_info
+         use const_def, only: dp
+         
+         integer, intent(in) :: id, n, nz
+         character (len=maxlen_profile_column_name) :: names(n)
+         integer, intent(out) :: ierr
+         type (star_info), pointer :: s
+         integer :: k
+         
+         ! Variables needed for osc
+         real(dp) :: sm, rt, sl, teff, reff, nc, nt, ng, ar6nc, omega, mean_rho, alpha
+         real(dp) :: P, rho, grada, gamma1, chiT, chirho, opacity, d_opacity_dlnT, &
+            d_opacity_dlnd, d_eos4_dlnT, logT
+         real(dp) :: eps_nuc, d_epsnuc_dlnd, d_epsnuc_dlnT
+         real(dp) :: A(nz, 20)
+         character fname*50, fname2*540, fname3*50
+         integer :: i, ic
+         logical :: iscenter
+         
+         ierr = 0
+         call star_ptr(id, s, ierr)
+         if (ierr /= 0) return
+         
+         fname2=trim(s% model_profile_filename)//".osc"
+         fname3=trim(fname2)
+         write(fname,123) s% model_number
+         123 format("LOGS",i5.5)
+         open (234,file=fname,status='unknown')
       
-      integer, intent(in) :: id, n, nz
-      character (len=maxlen_profile_column_name) :: names(n)
-      integer, intent(out) :: ierr
-      type (star_info), pointer :: s
-      integer :: k
-      
-      ! Variables needed for osc
-      real(dp) :: sm, rt, sl, teff, reff, nc, nt, ng, ar6nc, omega, mean_rho, alpha
-      real(dp) :: P, rho, grada, gamma1, chiT, chirho, opacity, d_opacity_dlnT, &
-         d_opacity_dlnd, d_eos4_dlnT, logT
-      real(dp) :: eps_nuc, d_epsnuc_dlnd, d_epsnuc_dlnT
-      real(dp) :: A(nz, 20)
-      character fname*50, fname2*540, fname3*50
-      integer :: i, ic
-      logical :: iscenter
-      
-      ierr = 0
-      call star_ptr(id, s, ierr)
-      if (ierr /= 0) return
-      
-      fname2=trim(s% model_profile_filename)//".osc"
-      fname3=trim(fname2)
-      write(fname,123) s% model_number
-      123 format("LOGS/osc",i5.5)
-      open (234,file=fname,status='unknown')
-   
-      sm = s% mstar / Msun
-      rt = 10.0 ** s% log_surface_radius
-      sl = 10.0 ** s%log_surface_luminosity
-      teff = s% Teff
-      reff = dsqrt(sl * Lsun / (pi4 * boltz_sigma * s%Teff ** 4.0)) / Rsun
-      nc = 0
-      ng = 1
-      ar6nc = 0
-      omega = s% omega(1)
-      mean_rho = (s% mstar) * 3.0 / (pi4 * ((rt * Rsun) ** 3.0))
-      
-      do i = s% nz, 2, -1
-         ic = s% nz - i + 1 
-         alpha = s% dq(i - 1) / (s% dq(i - 1) + s% dq(i))
-         P = alpha * s% Pgas(i) + (1 - alpha) * s% Pgas(i-1)
-         rho = alpha * s%rho(i) + (1 - alpha) * s% rho(i - 1)
-         grada = alpha * s% grada(i) + (1 - alpha) * s% grada(i - 1)
-         gamma1 = alpha * s% gamma1(i) + (1 - alpha) * s% gamma1(i - 1)
-         chiT = alpha * s% chiT(i) + (1 - alpha) * s% chiT(i - 1)
-         chirho = alpha * s% chirho(i) + (1 - alpha) * s% chirho(i - 1)
-         opacity = alpha * s% opacity(i) + (1 - alpha) * s% opacity(i - 1)
-         d_opacity_dlnT = alpha * s% d_opacity_dlnT(i) + (1 - alpha) * s% d_opacity_dlnT(i - 1)
-         d_opacity_dlnd = alpha * s% d_opacity_dlnd(i) + (1 - alpha) * s% d_opacity_dlnd(i - 1)
-         d_eos4_dlnT = alpha * s% d_eos_dlnT(4,i) + (1 - alpha) * s% d_eos_dlnT(4, i - 1) + &
-            alpha * s% d_eos_dlnd(4, i) * s% grad_density(i) / s% gradT(i) + &
-            (1 - alpha) * s% d_eos_dlnd(4, i - 1) * s% grad_density(i - 1) / s% gradT(i - 1)
-         logT = alpha * safe_log10(s%T(i)) + (1 - alpha) * safe_log10(s% T(i - 1))
-         eps_nuc = alpha * s% eps_nuc(i) + (1 - alpha) * s% eps_nuc(i - 1)
-         d_epsnuc_dlnT = alpha * s% d_epsnuc_dlnT(i) + (1 - alpha) * s% d_epsnuc_dlnT(i - 1)
-         d_epsnuc_dlnd = alpha * s% d_epsnuc_dlnd(i) + (1 - alpha) * s% d_epsnuc_dlnd(i - 1)
+         sm = s% mstar / Msun
+         rt = 10.0 ** s% log_surface_radius
+         sl = 10.0 ** s%log_surface_luminosity
+         teff = s% Teff
+         reff = dsqrt(sl * Lsun / (pi4 * boltz_sigma * s%Teff ** 4.0)) / Rsun
+         nc = 0
+         ng = 1
+         ar6nc = 0
+         omega = s% omega(1)
+         mean_rho = (s% mstar) * 3.0 / (pi4 * ((rt * Rsun) ** 3.0))
+         
+         do i = s% nz, 2, -1
+            ic = s% nz - i + 1 
+            alpha = s% dq(i - 1) / (s% dq(i - 1) + s% dq(i))
+            P = alpha * s% Pgas(i) + (1 - alpha) * s% Pgas(i-1)
+            rho = alpha * s%rho(i) + (1 - alpha) * s% rho(i - 1)
+            grada = alpha * s% grada(i) + (1 - alpha) * s% grada(i - 1)
+            gamma1 = alpha * s% gamma1(i) + (1 - alpha) * s% gamma1(i - 1)
+            chiT = alpha * s% chiT(i) + (1 - alpha) * s% chiT(i - 1)
+            chirho = alpha * s% chirho(i) + (1 - alpha) * s% chirho(i - 1)
+            opacity = alpha * s% opacity(i) + (1 - alpha) * s% opacity(i - 1)
+            d_opacity_dlnT = alpha * s% d_opacity_dlnT(i) + (1 - alpha) * s% d_opacity_dlnT(i - 1)
+            d_opacity_dlnd = alpha * s% d_opacity_dlnd(i) + (1 - alpha) * s% d_opacity_dlnd(i - 1)
+            d_eos4_dlnT = alpha * s% d_eos_dlnT(4,i) + (1 - alpha) * s% d_eos_dlnT(4, i - 1) + &
+               alpha * s% d_eos_dlnd(4, i) * s% grad_density(i) / s% gradT(i) + &
+               (1 - alpha) * s% d_eos_dlnd(4, i - 1) * s% grad_density(i - 1) / s% gradT(i - 1)
+            logT = alpha * safe_log10(s%T(i)) + (1 - alpha) * safe_log10(s% T(i - 1))
+            eps_nuc = alpha * s% eps_nuc(i) + (1 - alpha) * s% eps_nuc(i - 1)
+            d_epsnuc_dlnT = alpha * s% d_epsnuc_dlnT(i) + (1 - alpha) * s% d_epsnuc_dlnT(i - 1)
+            d_epsnuc_dlnd = alpha * s% d_epsnuc_dlnd(i) + (1 - alpha) * s% d_epsnuc_dlnd(i - 1)
 
-         A(i,1) = safe_log(s% r(i) / (rt * Rsun))
-         A(i,2) = pi4 * s% r(i) ** 3.0 * mean_rho / (s% m(i))
-         A(i,3) = s% r(i) * s% grav(i) * rho / P
-         A(i,4) = 1.0 / gamma1
-         A(i,5) = pi4 * s% r(i) ** 3 * rho / s% m(i)
-         A(i,6) = s% brunt_N2(i) * s% r(i) / s% grav(i)
-         A(i,7) = -chiT / chirho
-         A(i,8) = s% gradT(i)
-         A(i,9) = grada * (d_opacity_dlnT / opacity - 4.0) + &
-            A(i,4) * d_opacity_dlnd / opacity + grada / A(i,8) - d_eos4_dlnT
-         A(i,10) = grada / s% gradT(i)
-         A(i,11) = d_opacity_dlnT / opacity + d_opacity_dlnd / opacity * A(i,7) - 4.0
-         A(i,12) = sl * Lsun / s% L(i)
-         A(i,13) = sqrt(pi4 * standard_cgrav * mean_rho) / (sl * Lsun) * pi4 * &
-            s% r(i) ** 3 * P * (-A(i,7)) / grada
-         A(i,14) = logT
-         A(i,15) = eps_nuc
-      
-         if (eps_nuc .ne. 0) then
-            A(i,16) = d_epsnuc_dlnT / eps_nuc
-            A(i,17) = d_epsnuc_dlnd / eps_nuc
-         else if (eps_nuc .eq. 0) then
-            A(i,16)=0
-            A(i,17)=0
-         end if
-      
-         if ((A(i,10) .gt. 1.0) .and. iscenter) then
-            nc = ic
-            ar6nc = A(i,6)
-            iscenter = .false.
-         end if
-      
-         A(i,18) = s% omega(i)
-         A(i,19) = (s% gradT(i) * sl * Lsun) / (s% gradr(i) * s% L(i))
-      end do
-      
-!       write(234,*) "M R L Teff Reff nc nz-1 ng ar6nc omega_surf"
-      write(234,*) sm, rt, sl, teff, reff, NINT(nc), s% nz-1, NINT(ng), ar6nc, omega
-!       write(234,*) "a1 a2 V 1_div_Gamma U A a7 a8 a9 a10 a11 a12 a13 logT eNUC dlnenuc_dlnT dlnenuc_dlnrho omega"
-      do i = s% nz, 2, -1
-         write(234,124) A(i,1), A(i,2), A(i,3), A(i,4), A(i,5), A(i,6), A(i,7), &
-            A(i,8), A(i,9), A(i,10), A(i,11), A(i,12), A(i,13), A(i,14), A(i,15), &
-            A(i,16), A(i,17), A(i,18)
-      end do
-      124 format(18(e20.12,1x))
-      close(234)  
+            A(i,1) = safe_log(s% r(i) / (rt * Rsun))
+            A(i,2) = pi4 * s% r(i) ** 3.0 * mean_rho / (s% m(i))
+            A(i,3) = s% r(i) * s% grav(i) * rho / P
+            A(i,4) = 1.0 / gamma1
+            A(i,5) = pi4 * s% r(i) ** 3 * rho / s% m(i)
+            A(i,6) = s% brunt_N2(i) * s% r(i) / s% grav(i)
+            A(i,7) = -chiT / chirho
+            A(i,8) = s% gradT(i)
+            A(i,9) = grada * (d_opacity_dlnT / opacity - 4.0) + &
+               A(i,4) * d_opacity_dlnd / opacity + grada / A(i,8) - d_eos4_dlnT
+            A(i,10) = grada / s% gradT(i)
+            A(i,11) = d_opacity_dlnT / opacity + d_opacity_dlnd / opacity * A(i,7) - 4.0
+            A(i,12) = sl * Lsun / s% L(i)
+            A(i,13) = sqrt(pi4 * standard_cgrav * mean_rho) / (sl * Lsun) * pi4 * &
+               s% r(i) ** 3 * P * (-A(i,7)) / grada
+            A(i,14) = logT
+            A(i,15) = eps_nuc
+         
+            if (eps_nuc .ne. 0) then
+               A(i,16) = d_epsnuc_dlnT / eps_nuc
+               A(i,17) = d_epsnuc_dlnd / eps_nuc
+            else if (eps_nuc .eq. 0) then
+               A(i,16)=0
+               A(i,17)=0
+            end if
+         
+            if ((A(i,10) .gt. 1.0) .and. iscenter) then
+               nc = ic
+               ar6nc = A(i,6)
+               iscenter = .false.
+            end if
+         
+            A(i,18) = s% omega(i)
+            A(i,19) = (s% gradT(i) * sl * Lsun) / (s% gradr(i) * s% L(i))
+         end do
+         
+   !       write(234,*) "M R L Teff Reff nc nz-1 ng ar6nc omega_surf"
+         write(234,*) sm, rt, sl, teff, reff, NINT(nc), s% nz-1, NINT(ng), ar6nc, omega
+   !       write(234,*) "a1 a2 V 1_div_Gamma U A a7 a8 a9 a10 a11 a12 a13 logT eNUC dlnenuc_dlnT dlnenuc_dlnrho omega"
+         do i = s% nz, 2, -1
+            write(234,124) A(i,1), A(i,2), A(i,3), A(i,4), A(i,5), A(i,6), A(i,7), &
+               A(i,8), A(i,9), A(i,10), A(i,11), A(i,12), A(i,13), A(i,14), A(i,15), &
+               A(i,16), A(i,17), A(i,18)
+         end do
+         124 format(18(e20.12,1x))
+         close(234)  
       end subroutine make_osc
 
       end module run_star_extras
