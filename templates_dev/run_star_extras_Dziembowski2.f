@@ -1,33 +1,15 @@
-! ***********************************************************************
-!
-!   Copyright (C) 2010  Bill Paxton
-!
-!   this file is part of mesa.
-!
-!   mesa is free software; you can redistribute it and/or modify
-!   it under the terms of the gnu general library public license as published
-!   by the free software foundation; either version 2 of the license, or
-!   (at your option) any later version.
-!
-!   mesa is distributed in the hope that it will be useful, 
-!   but without any warranty; without even the implied warranty of
-!   merchantability or fitness for a particular purpose.  see the
-!   gnu library general public license for more details.
-!
-!   you should have received a copy of the gnu library general public license
-!   along with this software; if not, write to the free software
-!   foundation, inc., 59 temple place, suite 330, boston, ma 02111-1307 usa
-!
-! ***********************************************************************
- 
       module run_star_extras
 
       use star_lib
       use star_def
       use const_def
+      use eos_def
+      use eos_lib
+      use chem_def
+      use chem_lib
+      use const_lib
       use math_lib
-      ! use crlibm_lib
-         
+      
       implicit none
       
       ! these routines are called by the standard run_star check_model
@@ -44,9 +26,13 @@
          ! this is the place to set any procedure pointers you want to change
          ! e.g., other_wind, other_mixing, other_energy  (see star_data.inc)
 
-         ! Uncomment these lines if you wish to use the functions in this file,
-         ! otherwise we use a null_ version which does nothing.
+
+         ! the extras functions in this file will not be called
+         ! unless you set their function pointers as done below.
+         ! otherwise we use a null_ version which does nothing (except warn).
+
          s% extras_startup => extras_startup
+         s% extras_start_step => extras_start_step
          s% extras_check_model => extras_check_model
          s% extras_finish_step => extras_finish_step
          s% extras_after_evolve => extras_after_evolve
@@ -55,19 +41,15 @@
          s% how_many_extra_profile_columns => how_many_extra_profile_columns
          s% data_for_extra_profile_columns => data_for_extra_profile_columns  
 
-         ! Once you have set the function pointers you want,
-         ! then uncomment this (or set it in your star_job inlist)
-         ! to disable the printed warning message,
-         s% job% warn_run_star_extras =.false.       
+         s% how_many_extra_history_header_items => how_many_extra_history_header_items
+         s% data_for_extra_history_header_items => data_for_extra_history_header_items
+         s% how_many_extra_profile_header_items => how_many_extra_profile_header_items
+         s% data_for_extra_profile_header_items => data_for_extra_profile_header_items
 
-         
       end subroutine extras_controls
- 
-      ! None of the following functions are called unless you set their
-      ! function point in extras_control.
-          
       
-      integer function extras_startup(id, restart, ierr)
+      
+      subroutine extras_startup(id, restart, ierr)
          integer, intent(in) :: id
          logical, intent(in) :: restart
          integer, intent(out) :: ierr
@@ -75,24 +57,25 @@
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
-         extras_startup = 0
-         if (.not. restart) then
-            call alloc_extra_info(s)
-         else ! it is a restart
-            call unpack_extra_info(s)
-         end if
-
-      end function extras_startup
+      end subroutine extras_startup
       
 
-      ! returns either keep_going, retry, backup, or terminate.
-      integer function extras_check_model(id, id_extra)
-         
-         integer, intent(in) :: id, id_extra
+      integer function extras_start_step(id)
+         integer, intent(in) :: id
          integer :: ierr
          type (star_info), pointer :: s
-         real(dp) :: min_center_h1_for_diff
-         real(dp), parameter :: huge_dt_limit = 3.15d16 ! ~1 Gyr
+         ierr = 0
+         call star_ptr(id, s, ierr)
+         if (ierr /= 0) return
+         extras_start_step = 0
+      end function extras_start_step
+
+
+      ! returns either keep_going, retry, or terminate.
+      integer function extras_check_model(id)
+         integer, intent(in) :: id
+         integer :: ierr
+         type (star_info), pointer :: s
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
@@ -104,26 +87,6 @@
             return
          end if
 
-!       define STOPPING CRITERION: log_Teff_lower_limit = 4.2
-!       if ((s% center_h1 < 1d-4) .and. (safe_log10(s% Teff) < 4.2)) then
-!          termination_code_str(t_xtra1) = 'log_Teff below 4.2'
-!          s% termination_code = t_xtra1
-!          extras_check_model = terminate
-!       end if
-
-!      check DIFFUSION: to determine whether or not diffusion should happen
-!      no diffusion for fully convective, post-MS, and mega-old models 
-      s% diffusion_dt_limit = 3.15d7
-      if(abs(s% mass_conv_core - s% star_mass) < 1d-2) then ! => fully convective
-         s% diffusion_dt_limit = huge_dt_limit
-      end if
-      if (s% star_age > 5d10) then !50 Gyr is really old
-         s% diffusion_dt_limit = huge_dt_limit
-      end if
-      min_center_h1_for_diff = 1d-10
-      if (s% center_h1 < min_center_h1_for_diff) then
-         s% diffusion_dt_limit = huge_dt_limit
-      end if
 
          ! if you want to check multiple conditions, it can be useful
          ! to set a different termination code depending on which
@@ -134,12 +97,12 @@
          ! termination_code_str(t_xtra1) = 'my termination condition'
 
          ! by default, indicate where (in the code) MESA terminated
-         ! if (extras_check_model == terminate) s% termination_code = t_extras_check_model
+         if (extras_check_model == terminate) s% termination_code = t_extras_check_model
       end function extras_check_model
 
 
-      integer function how_many_extra_history_columns(id, id_extra)
-         integer, intent(in) :: id, id_extra
+      integer function how_many_extra_history_columns(id)
+         integer, intent(in) :: id
          integer :: ierr
          type (star_info), pointer :: s
          ierr = 0
@@ -149,15 +112,13 @@
       end function how_many_extra_history_columns
       
       
-      subroutine data_for_extra_history_columns(id, id_extra, n, names, vals, ierr)
-         
-         
-         integer, intent(in) :: id, id_extra, n
+      subroutine data_for_extra_history_columns(id, n, names, vals, ierr)
+         integer, intent(in) :: id, n
          character (len=maxlen_history_column_name) :: names(n)
          real(dp) :: vals(n)
          integer, intent(out) :: ierr
          type (star_info), pointer :: s
-         
+
          integer :: k
          integer :: he_core_zone
          integer :: h_shell_bottom_zone
@@ -165,15 +126,15 @@
          integer :: envelope_bottom_zone
          real :: m_env_conv
          real :: m_env_rad
-         
+
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
          
-         !note: do NOT add the extras names to history_columns.list
-         ! the history_columns.list is only for the built-in log column options.
+         ! note: do NOT add the extras names to history_columns.list
+         ! the history_columns.list is only for the built-in history column options.
          ! it must not include the new column names you are adding here.
-         
+
          ! log10(LHe/LH)
          names(1) = "log_LHe_div_LH"
          vals(1) = safe_log10(s% power_he_burn / s% power_h_burn)
@@ -222,9 +183,9 @@
       end subroutine data_for_extra_history_columns
 
       
-      integer function how_many_extra_profile_columns(id, id_extra)
+      integer function how_many_extra_profile_columns(id)
          use star_def, only: star_info
-         integer, intent(in) :: id, id_extra
+         integer, intent(in) :: id
          integer :: ierr
          type (star_info), pointer :: s
          ierr = 0
@@ -234,32 +195,33 @@
       end function how_many_extra_profile_columns
       
       
-      subroutine data_for_extra_profile_columns(id, id_extra, n, nz, names, vals, ierr)
+      subroutine data_for_extra_profile_columns(id, n, nz, names, vals, ierr)
          use star_def, only: star_info, maxlen_profile_column_name
          use const_def, only: dp
+         use eos_lib, only: eosPT_get
          use star_lib, only: star_interp_val_to_pt
-         integer, intent(in) :: id, id_extra, n, nz
+         integer, intent(in) :: id, n, nz
          character (len=maxlen_profile_column_name) :: names(n)
          real(dp) :: vals(nz,n)
          integer, intent(out) :: ierr
          type (star_info), pointer :: s
          integer :: k
-         
-      ! Variables needed for osc
-      real(dp) :: sm, rt, sl, teff, reff, nc, nt, ng, ar6nc, omega, mean_rho, alpha
-      real(dp) :: P, rho, grada, gamma1, chiT, chirho, opacity, d_opacity_dlnT, &
+         ! Variables needed for osc
+         real(dp) :: sm, rt, sl, teff, reff, nc, nt, ng, ar6nc, omega, mean_rho, alpha
+         real(dp) :: P, rho, grada, gamma1, chiT, chirho, opacity, d_opacity_dlnT, &
          d_opacity_dlnd, d_eos4_dlnT, logT
-      real(dp) :: eps_nuc, d_epsnuc_dlnd, d_epsnuc_dlnT
-      real(dp) :: A(nz, 20)
-      character fname*50, fname2*540, fname3*50
-      integer :: i, ic
-      logical :: iscenter
-         
+         real(dp) :: eps_nuc, d_epsnuc_dlnd, d_epsnuc_dlnT
+         real(dp) :: A(nz, 20)
+         character fname*50, fname2*540, fname3*50
+         integer :: i, ic
+         logical :: iscenter
+
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
          
-         !note: do NOT add the extra names to profile_columns.list
+         
+         ! note: do NOT add the extra names to profile_columns.list
          ! the profile_columns.list is only for the built-in profile column options.
          ! it must not include the new column names you are adding here.
 
@@ -270,7 +232,6 @@
          !   vals(k,1) = s% Pgas(k)/s% P(k)
          !end do
          
-         
          names(1) = 'rho_face'
          do k = 1, nz
          vals(k,1) = s% rho_face(k)
@@ -278,14 +239,14 @@
          
          names(2) = 'P_face'
          do k = 1, nz
-            vals(k,2) = star_interp_val_to_pt(s% P,k,s% nz,s% dq,'P_face')
+            vals(k,2) = star_interp_val_to_pt(s% Pgas,k,s% nz,s% dq,'P_face')
          end do
          
-         names(3) = 'dlnRho_dlnT_const_Pgas_face'
-         do k = 1, nz
-            vals(k,3) = star_interp_val_to_pt(s% dlnRho_dlnT_const_Pgas,k,s% nz,s% dq, &
-                'dlnRho_dlnT_const_Pgas_face')
-         end do
+         ! names(3) = 'dlnRho_dlnT_const_Pgas_face'
+         ! do k = 1, nz
+         !    vals(k,3) = star_interp_val_to_pt(s% dlnRho_dlnT_const_Pgas,k,s% nz,s% dq, &
+         !        'dlnRho_dlnT_const_Pgas_face')
+         ! end do
          
          names(4) = 'opacity_face'
          do k = 1, nz
@@ -308,17 +269,75 @@
          end do
       
       if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
-         call make_osc(id, id_extra, n, nz, names, ierr)
+         call make_osc(id, n, nz, names, ierr)
       end if
-      
+
       end subroutine data_for_extra_profile_columns
-      
+
+
+      integer function how_many_extra_history_header_items(id)
+         integer, intent(in) :: id
+         integer :: ierr
+         type (star_info), pointer :: s
+         ierr = 0
+         call star_ptr(id, s, ierr)
+         if (ierr /= 0) return
+         how_many_extra_history_header_items = 0
+      end function how_many_extra_history_header_items
+
+
+      subroutine data_for_extra_history_header_items(id, n, names, vals, ierr)
+         integer, intent(in) :: id, n
+         character (len=maxlen_history_column_name) :: names(n)
+         real(dp) :: vals(n)
+         type(star_info), pointer :: s
+         integer, intent(out) :: ierr
+         ierr = 0
+         call star_ptr(id,s,ierr)
+         if(ierr/=0) return
+
+         ! here is an example for adding an extra history header item
+         ! also set how_many_extra_history_header_items
+         ! names(1) = 'mixing_length_alpha'
+         ! vals(1) = s% mixing_length_alpha
+
+      end subroutine data_for_extra_history_header_items
+
+
+      integer function how_many_extra_profile_header_items(id)
+         integer, intent(in) :: id
+         integer :: ierr
+         type (star_info), pointer :: s
+         ierr = 0
+         call star_ptr(id, s, ierr)
+         if (ierr /= 0) return
+         how_many_extra_profile_header_items = 0
+      end function how_many_extra_profile_header_items
+
+
+      subroutine data_for_extra_profile_header_items(id, n, names, vals, ierr)
+         integer, intent(in) :: id, n
+         character (len=maxlen_profile_column_name) :: names(n)
+         real(dp) :: vals(n)
+         type(star_info), pointer :: s
+         integer, intent(out) :: ierr
+         ierr = 0
+         call star_ptr(id,s,ierr)
+         if(ierr/=0) return
+
+         ! here is an example for adding an extra profile header item
+         ! also set how_many_extra_profile_header_items
+         ! names(1) = 'mixing_length_alpha'
+         ! vals(1) = s% mixing_length_alpha
+
+      end subroutine data_for_extra_profile_header_items
+
 
       ! returns either keep_going or terminate.
-      ! note: cannot request retry or backup; extras_check_model can do that.
-      integer function extras_finish_step(id, id_extra)
+      ! note: cannot request retry; extras_check_model can do that.
+      integer function extras_finish_step(id)
          use chem_def, only: ih1
-         integer, intent(in) :: id, id_extra
+         integer, intent(in) :: id
          integer :: ierr
          type (star_info), pointer :: s
          ierr = 0
@@ -328,15 +347,15 @@
          call store_extra_info(s)
 
          ! to save a profile, 
-            ! s% need_to_save_profiles_now = .true.
+         ! s% need_to_save_profiles_now = .true.
          ! to update the star log,
-            ! s% need_to_update_history_now = .true.
-          
-       if (abs(s% mstar_dot) > 0. .and. s% xa(s% net_iso(ih1), s% nz) > 0.1) then
-         s% varcontrol_target = 5.0d-4
-       else if (s% xa(s% net_iso(ih1), s% nz) <= 0.1) then
-         s% varcontrol_target = 1.0d-4
-       end if
+         ! s% need_to_update_history_now = .true.
+
+         if (abs(s% mstar_dot) > 0. .and. s% xa(s% net_iso(ih1), s% nz) > 0.1) then
+            s% varcontrol_target = 5.0d-4
+         else if (s% xa(s% net_iso(ih1), s% nz) <= 0.1) then
+            s% varcontrol_target = 1.0d-4
+         end if
 
          ! see extras_check_model for information about custom termination codes
          ! by default, indicate where (in the code) MESA terminated
@@ -344,16 +363,15 @@
       end function extras_finish_step
       
       
-      subroutine extras_after_evolve(id, id_extra, ierr)
-      integer, intent(in) :: id, id_extra
-      integer, intent(out) :: ierr
-      type (star_info), pointer :: s
-      ierr = 0
-      call star_ptr(id, s, ierr)
-      if (ierr /= 0) return      
+      subroutine extras_after_evolve(id, ierr)
+         integer, intent(in) :: id
+         integer, intent(out) :: ierr
+         type (star_info), pointer :: s
+         ierr = 0
+         call star_ptr(id, s, ierr)
+         if (ierr /= 0) return
       end subroutine extras_after_evolve
-      
-      
+
       ! routines for saving and restoring extra data so can do restarts
          
          ! put these defs at the top and delete from the following routines
@@ -454,12 +472,12 @@
       
       end subroutine move_extra_info
       
-      subroutine make_osc(id, id_extra, n, nz, names, ierr)
+      subroutine make_osc(id, n, nz, names, ierr)
          ! Create osc files. Based on P. Walczak's code.
       use star_def, only: star_info
       use const_def, only: dp
       
-      integer, intent(in) :: id, id_extra, n, nz
+      integer, intent(in) :: id, n, nz
       character (len=maxlen_profile_column_name) :: names(n)
       integer, intent(out) :: ierr
       type (star_info), pointer :: s
@@ -485,16 +503,16 @@
       123 format("LOGS/osc",i5.5)
       open (234,file=fname,status='unknown')
    
-      sm = s% mstar / msol
+      sm = s% mstar / Msun
       rt = 10.0 ** s% log_surface_radius
       sl = 10.0 ** s%log_surface_luminosity
       teff = s% Teff
-      reff = dsqrt(sl * lsol / (pi4 * boltz_sigma * s%Teff ** 4.0)) / rsol
+      reff = dsqrt(sl * Lsun / (pi4 * boltz_sigma * s%Teff ** 4.0)) / Rsun
       nc = 0
       ng = 1
       ar6nc = 0
       omega = s% omega(1)
-      mean_rho = (s% mstar) * 3.0 / (pi4 * ((rt * rsol) ** 3.0))
+      mean_rho = (s% mstar) * 3.0 / (pi4 * ((rt * Rsun) ** 3.0))
       
       do i = s% nz, 2, -1
          ic = s% nz - i + 1 
@@ -516,7 +534,7 @@
          d_epsnuc_dlnT = alpha * s% d_epsnuc_dlnT(i) + (1 - alpha) * s% d_epsnuc_dlnT(i - 1)
          d_epsnuc_dlnd = alpha * s% d_epsnuc_dlnd(i) + (1 - alpha) * s% d_epsnuc_dlnd(i - 1)
 
-         A(i,1) = safe_log(s% r(i) / (rt * rsol))
+         A(i,1) = safe_log(s% r(i) / (rt * Rsun))
          A(i,2) = pi4 * s% r(i) ** 3.0 * mean_rho / (s% m(i))
          A(i,3) = s% r(i) * s% grav(i) * rho / P
          A(i,4) = 1.0 / gamma1
@@ -528,8 +546,8 @@
             A(i,4) * d_opacity_dlnd / opacity + grada / A(i,8) - d_eos4_dlnT
          A(i,10) = grada / s% gradT(i)
          A(i,11) = d_opacity_dlnT / opacity + d_opacity_dlnd / opacity * A(i,7) - 4.0
-         A(i,12) = sl * lsol / s% L(i)
-         A(i,13) = sqrt(pi4 * standard_cgrav * mean_rho) / (sl * lsol) * pi4 * &
+         A(i,12) = sl * Lsun / s% L(i)
+         A(i,13) = sqrt(pi4 * standard_cgrav * mean_rho) / (sl * Lsun) * pi4 * &
             s% r(i) ** 3 * P * (-A(i,7)) / grada
          A(i,14) = logT
          A(i,15) = eps_nuc
@@ -549,7 +567,7 @@
          end if
       
          A(i,18) = s% omega(i)
-         A(i,19) = (s% gradT(i) * sl * lsol) / (s% gradr(i) * s% L(i))
+         A(i,19) = (s% gradT(i) * sl * Lsun) / (s% gradr(i) * s% L(i))
       end do
       
 !       write(234,*) "M R L Teff Reff nc nz-1 ng ar6nc omega_surf"
@@ -566,3 +584,4 @@
 
       end module run_star_extras
       
+

@@ -167,7 +167,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                     ## Run from inlist template by setting parameters for each phase
                     print(phase_name)
                     star.load_InlistProject(inlist_file)
-                    star.load_Extras("/Users/anujgautam/Documents/Workspace/dSct-playground/run_star_extras_Dziembowski.f")
+                    star.load_Extras("/Users/anujgautam/Documents/Workspace/dSct-playground/src/templates_dev/run_star_extras_Dziembowski2.f")
                     star.set(phases_params[phase_name], force=True)
 
                     ## ADDITIONAL PARAMETERS
