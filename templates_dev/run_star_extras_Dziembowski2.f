@@ -312,10 +312,10 @@
             vals(k,7) = star_interp_val_to_pt(s% chiT,k,s% nz,s% dq,'chiT_face')
          end do
       
-         if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
-            call make_osc(id, n, nz, names, ierr)
-         end if
-         ! call make_osc(id, n, nz, names, ierr)
+         ! if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
+         !    call make_osc(id, n, nz, names, ierr)
+         ! end if
+         call make_osc(id, n, nz, names, ierr)
       end subroutine data_for_extra_profile_columns
 
 
@@ -489,7 +489,12 @@
          fname3=trim(fname2)
          write(fname,123) s% model_number
          123 format("LOGS/osc",i5.5)
-         open (234,file=fname,status='unknown')
+         ! open (234,file=fname,status='unknown')
+         open (234,file=fname,status='unknown',iostat=ierr)
+         if (ierr /= 0) then
+            print *, 'Error opening file: ', fname
+            return
+         end if
       
          sm = s% mstar / Msun
          rt = 10.0 ** s% log_surface_radius
