@@ -1,3 +1,25 @@
+! ***********************************************************************
+!
+!   Copyright (C) 2011-2019  The MESA Team
+!
+!   This file is part of MESA.
+!
+!   MESA is free software; you can redistribute it and/or modify
+!   it under the terms of the GNU General Library Public License as published
+!   by the Free Software Foundation; either version 2 of the License, or
+!   (at your option) any later version.
+!
+!   MESA is distributed in the hope that it will be useful, 
+!   but WITHOUT ANY WARRANTY; without even the implied warranty of
+!   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!   GNU Library General Public License for more details.
+!
+!   You should have received a copy of the GNU Library General Public License
+!   along with this software; if not, write to the Free Software
+!   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+!
+! ***********************************************************************
+
       module run_star_extras
 
       use star_lib
@@ -32,7 +54,7 @@
          ! otherwise we use a null_ version which does nothing (except warn).
 
          s% extras_startup => extras_startup
-         s% extras_start_step => extras_start_step
+         ! s% extras_start_step => extras_start_step
          s% extras_check_model => extras_check_model
          s% extras_finish_step => extras_finish_step
          s% extras_after_evolve => extras_after_evolve
@@ -41,13 +63,7 @@
          s% how_many_extra_profile_columns => how_many_extra_profile_columns
          s% data_for_extra_profile_columns => data_for_extra_profile_columns  
 
-         s% how_many_extra_history_header_items => how_many_extra_history_header_items
-         s% data_for_extra_history_header_items => data_for_extra_history_header_items
-         s% how_many_extra_profile_header_items => how_many_extra_profile_header_items
-         s% data_for_extra_profile_header_items => data_for_extra_profile_header_items
-
       end subroutine extras_controls
-      
       
       subroutine extras_startup(id, restart, ierr)
          integer, intent(in) :: id
@@ -57,24 +73,24 @@
          ierr = 0
          call star_ptr(id, s, ierr)
          if (ierr /= 0) return
-         extras_startup = 0
+         ! extras_startup = 0
          if (.not. restart) then
             call alloc_extra_info(s)
          else ! it is a restart
             call unpack_extra_info(s)
          end if
       end subroutine extras_startup
-      
 
-      integer function extras_start_step(id)
-         integer, intent(in) :: id
-         integer :: ierr
-         type (star_info), pointer :: s
-         ierr = 0
-         call star_ptr(id, s, ierr)
-         if (ierr /= 0) return
-         extras_start_step = 0
-      end function extras_start_step
+
+      ! integer function extras_start_step(id)
+      !    integer, intent(in) :: id
+      !    integer :: ierr
+      !    type (star_info), pointer :: s
+      !    ierr = 0
+      !    call star_ptr(id, s, ierr)
+      !    if (ierr /= 0) return
+      !    extras_start_step = 0
+      ! end function extras_start_step
 
 
       ! returns either keep_going, retry, or terminate.
@@ -191,15 +207,15 @@
          names(4) = "M_env_c_div_M_env_rad"
          m_env_conv = 0.
           m_env_rad = 0.
-       if (s% he_core_mass > 0) then
-          do k = he_core_zone, 1, -1
-             if (s% mlt_mixing_type(k) >= 1 .and. s% mlt_mixing_type(k) <= 4) then
-                m_env_conv = m_env_conv + s% dm(k)
-             else
-                m_env_rad = m_env_rad + s% dm(k)
-             endif
-          end do         
-            vals(4) = m_env_conv / m_env_rad
+         if (s% he_core_mass > 0) then
+            do k = he_core_zone, 1, -1
+               if (s% mlt_mixing_type(k) >= 1 .and. s% mlt_mixing_type(k) <= 4) then
+                  m_env_conv = m_env_conv + s% dm(k)
+               else
+                  m_env_rad = m_env_rad + s% dm(k)
+               endif
+            end do         
+               vals(4) = m_env_conv / m_env_rad
          else
             vals(4) = -1.
          endif
@@ -296,69 +312,11 @@
             vals(k,7) = star_interp_val_to_pt(s% chiT,k,s% nz,s% dq,'chiT_face')
          end do
       
-         ! if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
-         !    call make_osc(id, n, nz, names, ierr)
-         ! end if
-         call make_osc(id, n, nz, names, ierr)
+         if (s% x_logical_ctrl(1) .and. mod(s% model_number,s% profile_interval) == 0) then
+            call make_osc(id, n, nz, names, ierr)
+         end if
+         ! call make_osc(id, n, nz, names, ierr)
       end subroutine data_for_extra_profile_columns
-
-
-      ! integer function how_many_extra_history_header_items(id)
-      !    integer, intent(in) :: id
-      !    integer :: ierr
-      !    type (star_info), pointer :: s
-      !    ierr = 0
-      !    call star_ptr(id, s, ierr)
-      !    if (ierr /= 0) return
-      !    how_many_extra_history_header_items = 0
-      ! end function how_many_extra_history_header_items
-
-
-      ! subroutine data_for_extra_history_header_items(id, n, names, vals, ierr)
-      !    integer, intent(in) :: id, n
-      !    character (len=maxlen_history_column_name) :: names(n)
-      !    real(dp) :: vals(n)
-      !    type(star_info), pointer :: s
-      !    integer, intent(out) :: ierr
-      !    ierr = 0
-      !    call star_ptr(id,s,ierr)
-      !    if(ierr/=0) return
-
-      !    ! here is an example for adding an extra history header item
-      !    ! also set how_many_extra_history_header_items
-      !    ! names(1) = 'mixing_length_alpha'
-      !    ! vals(1) = s% mixing_length_alpha
-
-      ! end subroutine data_for_extra_history_header_items
-
-
-      ! integer function how_many_extra_profile_header_items(id)
-      !    integer, intent(in) :: id
-      !    integer :: ierr
-      !    type (star_info), pointer :: s
-      !    ierr = 0
-      !    call star_ptr(id, s, ierr)
-      !    if (ierr /= 0) return
-      !    how_many_extra_profile_header_items = 0
-      ! end function how_many_extra_profile_header_items
-
-
-      ! subroutine data_for_extra_profile_header_items(id, n, names, vals, ierr)
-      !    integer, intent(in) :: id, n
-      !    character (len=maxlen_profile_column_name) :: names(n)
-      !    real(dp) :: vals(n)
-      !    type(star_info), pointer :: s
-      !    integer, intent(out) :: ierr
-      !    ierr = 0
-      !    call star_ptr(id,s,ierr)
-      !    if(ierr/=0) return
-
-      !    ! here is an example for adding an extra profile header item
-      !    ! also set how_many_extra_profile_header_items
-      !    ! names(1) = 'mixing_length_alpha'
-      !    ! vals(1) = s% mixing_length_alpha
-
-      ! end subroutine data_for_extra_profile_header_items
 
 
       ! returns either keep_going or terminate.
@@ -517,7 +475,9 @@
             d_opacity_dlnd, d_eos4_dlnT, logT
          real(dp) :: eps_nuc, d_epsnuc_dlnd, d_epsnuc_dlnT
          real(dp) :: A(nz, 20)
-         character fname*50, fname2*540, fname3*50
+         ! character fname*50, fname2*540, fname3*50
+         character(len=50) :: fname, fname3 
+         character(len=540) :: fname2
          integer :: i, ic
          logical :: iscenter
          
@@ -528,7 +488,7 @@
          fname2=trim(s% model_profile_filename)//".osc"
          fname3=trim(fname2)
          write(fname,123) s% model_number
-         123 format("LOGS",i5.5)
+         123 format("LOGS/osc",i5.5)
          open (234,file=fname,status='unknown')
       
          sm = s% mstar / Msun
@@ -598,9 +558,9 @@
             A(i,19) = (s% gradT(i) * sl * Lsun) / (s% gradr(i) * s% L(i))
          end do
          
-   !       write(234,*) "M R L Teff Reff nc nz-1 ng ar6nc omega_surf"
+         write(234,*) "M R L Teff Reff nc nz-1 ng ar6nc omega_surf"
          write(234,*) sm, rt, sl, teff, reff, NINT(nc), s% nz-1, NINT(ng), ar6nc, omega
-   !       write(234,*) "a1 a2 V 1_div_Gamma U A a7 a8 a9 a10 a11 a12 a13 logT eNUC dlnenuc_dlnT dlnenuc_dlnrho omega"
+         write(234,*) "a1 a2 V 1_div_Gamma U A a7 a8 a9 a10 a11 a12 a13 logT eNUC dlnenuc_dlnT dlnenuc_dlnrho omega"
          do i = s% nz, 2, -1
             write(234,124) A(i,1), A(i,2), A(i,3), A(i,4), A(i,5), A(i,6), A(i,7), &
                A(i,8), A(i,9), A(i,10), A(i,11), A(i,12), A(i,13), A(i,14), A(i,15), &
