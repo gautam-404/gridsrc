@@ -286,7 +286,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         archiving_successful = False
         try:
             print("Archiving LOGS...")
-            helper.archive_LOGS(name, name_og, True, (gyre_flag and res), archive_path)
+            helper.archive_LOGS(name, name_og, True, (gyre_flag and res), archive_path, remove=False)
             archive_successful = True
         except Exception as e:
             print("Archiving failed for track ", name_og)
