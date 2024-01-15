@@ -142,8 +142,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             template_path = "./src/templates_dev"
             # template_path = "./src/templates"
             inlist_file = f"{template_path}/inlist_template"
-            # star.load_HistoryColumns(f"{template_path}/history_columns.list")
-            # star.load_ProfileColumns(f"{template_path}/profile_columns.list")
+            star.load_HistoryColumns(f"{template_path}/history_columns.list")
+            star.load_ProfileColumns(f"{template_path}/profile_columns.list")
             stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":1.2530E+007}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
