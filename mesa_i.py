@@ -145,11 +145,11 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
             star.load_Extras(f"{template_path}/run_star_extras_Dziembowski2.f")
-            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":1.2530E+007}, {"stop_at_phase_TAMS":True}, "ERGB"]
+            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":5E+007}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
             max_timestep = [1e4, 1e6, 1e6, 2e6, 1E7]    ## For tests
-            profile_interval = [1, 3, 3, 5, 5]
+            profile_interval = [5, 5, 5, 5, 5]
             phases_params = helper.phases_params(initial_mass, Zinit)     
             phases_names = list(phases_params.keys())
             if failed_phase is None or failed_phase == "Create Pre-MS Model":
