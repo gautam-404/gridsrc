@@ -198,6 +198,9 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                         if len(convergence_helpers[retry-1]) > 0:
                             star.set(convergence_helpers[retry-1], force=True)
 
+                    ## Rotation type: uniform or differential
+                    star.set({"set_uniform_am_nu_non_rot": uniform_rotation}, force=True)
+
                     #### RUN ####
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
@@ -212,8 +215,6 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                         ## Initiate rotation
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
-                            ## Rotation type: uniform or differential
-                            star.set({"set_uniform_am_nu_non_rot": uniform_rotation}, force=True)
                         ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
                         shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
                         ## Resume
