@@ -117,7 +117,7 @@ def get_hist(archive_dir, index):
     h['m'] = m
     h['z'] = z
     h['v'] = v
-    h['param'] = inputs.iloc[index]['param']
+    h['param'] = inputs.iloc[index]['param'] if 'param' in inputs.columns else 0
     h['tr_num'] = param_idx
     h['Myr'] = h['star_age']*1e-6
     h["teff"] = np.round(np.power(10, h["log_Teff"]), 2)
