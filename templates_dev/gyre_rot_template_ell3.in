@@ -44,7 +44,48 @@
 
 
 &osc
-	inner_bound = 'ZERO_R'
+	inner_bound = 'ZERO_R'		!!! Zero radial displacement at inner boundary (only valid when inner grid point is at x!=0)
+	! inner_bound = 'ZERO_H'		!!! Zero horizontal displacement at inner boundary (only valid when inner grid point is at x!=0)
+	! inner_bound = 'REGULAR'		!!! (default) Regularity-enforcing at inner boundary (only valid when inner grid point is at x=0)
+
+	outer_bound = 'VACUUM'			!!! (default) Vanishing surface density
+	! outer_bound = 'DZIEM'			!!! Formulation following Dziembowski (1971)
+	! outer_bound = 'UNNO'			!!! Formulation following Unno et al. (1989)
+	! outer_bound = 'JCD'				!!! Formulation following Jørgen Christensen-Dalsgaard (ADIPLS)
+	! outer_bound = 'ISOTHERMAL'		!!! Formulation based on local dispersion analysis for isothermal atmosphere
+	! outer_bound = 'GAMMA'			!!! Vanishing displacement and derivative at outer boundary, intended for use with modes (isolated g modes; see Ong & Basu, 2020)
+
+	adiabatic = .TRUE.
+	! nonadiabatic = .TRUE.
+
+	outer_bound_branch = 'E_NEG'		!!! (default) Outward-decaying energy density
+	! outer_bound_branch = 'E_POS'		!!! Outward-growing energy density
+	! outer_bound_branch = 'F_NEG'		!!! Outward energy flux
+	! outer_bound_branch = 'F_POS'		!!! Inward energy flux
+	! outer_bound_branch = 'V_NEG'		!!! Outward phase velocity
+	! outer_bound_branch = 'V_POS'		!!! Inward phase velocity
+
+	variables_set = 'GYRE'			!!! (default) GYRE formulation, as described in the Dimensionless Formulation section
+	! variables_set = 'DZIEM'			!!! Formulation following Dziembowski (1971) !!! Max 1e-13% difference in freq 
+	! variables_set = 'JCD'			!!! Formulation following Jørgen Christensen-Dalsgaard (ADIPLS) 
+	! variables_set = 'MIX'			!!! Mixed formulation ('JCD' for y3,4 and 'DZIEM' for y1,2) 
+	! variables_set = 'LAGP'			!!! Lagrangian pressure perturbation formulation 
+
+	! conv_scheme = 'FROZEN_PESNELL_1'	!!! (default) Freeze convective heating altogether; case 1 described by Pesnell (1990)
+	! conv_scheme = 'FROZEN_PESNELL_4'	!!! Freeze Lagrangian perturbation of convective luminosity; case 4 described by Pesnell (1990) 
+
+	! zeta_scheme = 'KAWALER'			!!! (default) Evaluate using eqn. (7) of Kawaler et al. (1985), as corrected by Townsend & Kawaler (2023)
+	! zeta_scheme = 'PESNELL'			!!! Evaluate using eqn. (A5) of Pesnell (1987) 
+	! zeta_scheme = 'KAWALER_GRAV'		!!! Evaluate using the g-mode part in eqn. (7) of Kawaler et al. (1985)
+	! zeta_scheme = 'DUPRET'			!!! Evaluate using eqn. (1.71) of Dupret (2002, PhD thesis)	
+
+	! quasiad_eigfuncs = .FALSE.		!!! (default .FALSE.) Flag to calculate quasi-adiabatic entropy/luminosity eigenfunctions during adiabatic calculations
+	! quasiad_eigfuncs = .TRUE.			
+
+	! reduce_order = .TRUE.			!!! (default .TRUE.) Flag to reduce the order of the adiabatic radial-pulsation equations from 4 to 2
+	! reduce_order = .FALSE.		!!! max 0.14 % difference in freq, only for l>1
+
+
 /
 
 &num
@@ -84,12 +125,12 @@
 	freq_frame = 'INERTIAL'
 	summary_file='SJM_GYRE_profile00.txt'
 	summary_file_format = 'TXT'
-	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot' ! Items to appear in summary file"
+	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot,Omega_rot_ref,domega_rot,dfreq_rot,beta' ! Items to appear in summary file"
 /
 
 &nad_output
 	freq_units = 'CYC_PER_DAY'
 	summary_file = 'freq_output_nonad.txt'
 	summary_file_format = 'TXT'
-	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot' ! Items to appear in summary file"
+	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot,Omega_rot_ref,domega_rot,dfreq_rot,beta' ! Items to appear in summary file"
 /
