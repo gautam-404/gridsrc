@@ -224,7 +224,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                         print(f"End age: {age:.2e} yrs")
                         print(f"Termination code: {termination_code}\n")
                         failed = False
-                    elif phase_name == "Evolution to TAMS"
+                    elif phase_name == "Evolution to TAMS":
                         ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
                         shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
                         ## Resume 
