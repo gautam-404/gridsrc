@@ -140,7 +140,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
-            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":100e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
+            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":50e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
             max_timestep = [1e4, 1e6, 1e6, 2e6, 1E7]    ## For tests
@@ -224,7 +224,24 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                         print(f"End age: {age:.2e} yrs")
                         print(f"Termination code: {termination_code}\n")
                         failed = False
+                    elif phase_name == "Evolution to TAMS"
+                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
+                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                        ## Resume 
+                        termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
+                        print(f"End age: {age:.2e} yrs")
+                        print(f"Termination code: {termination_code}\n")
+                        failed = False
                         break
+                    # elif phase_name == "Evolution post-MS":
+                    #     ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
+                    #     shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                    #     ## Resume 
+                    #     termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
+                    #     print(f"End age: {age:.2e} yrs")
+                    #     print(f"Termination code: {termination_code}\n")
+                    #     failed = False
+                    #     break
                 except Exception as e:
                     failed = True
                     print(e)

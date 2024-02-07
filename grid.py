@@ -54,7 +54,7 @@ def init_grid(mass_range=None, metallicity_range=None, v_surf_init_range=None, l
             sample_v_init = np.arange(v_surf_init_range[0], v_surf_init_range[1], v_surf_init_range[2])
             masses, metallicities, v_surf_init_list = get_grid(sample_masses, sample_metallicities, sample_v_init)
         else:
-            sample_masses = np.arange(1.2, 2.22, 0.02)                ## 1.36 - 2.20 Msun (0.02 Msun step)
+            sample_masses = np.arange(1.4, 2.52, 0.02)                ## 1.36 - 2.20 Msun (0.02 Msun step)
             sample_metallicities = np.arange(0.001, 0.027, 0.001)    ## 0.001 - 0.012 (0.0001 step)
             sample_v_init = np.arange(0, 22, 2)                          ## 0 - 20 km/s (2 km/s step)
             masses, metallicities, v_surf_init_list = get_grid(sample_masses, sample_metallicities, sample_v_init)
