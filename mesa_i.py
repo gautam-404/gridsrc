@@ -93,6 +93,9 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
         name = os.path.abspath(os.path.join(jobfs, name_og))
     except KeyError:
+        jobfs = os.path.join(os.environ["TMPDIR"], "gridwork")
+        name = os.path.abspath(os.path.join(jobfs, name_og))
+    else:
         jobfs = os.path.abspath("./gridwork")
         name = os.path.join(jobfs, name_og)
 
