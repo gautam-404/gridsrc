@@ -23,14 +23,14 @@ def untar_profiles(profile_tar, jobfs=None):
     """
     if jobfs is None:
         HOME = os.environ["HOME"]
+        grid_name = profile_tar.split('/')[-3].split('grid_archive_')[-1]
         try:
-            jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
+            jobfs = os.path.join(os.environ["PBS_JOBFS"], f"gridwork_{grid_name}")
         except KeyError:
-            jobfs = os.path.join(os.environ["TMPDIR"], "gridwork")
+            jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
         else:
-            grid_name = profile_tar.split('/')[-3].split('grid_archive_')[-1]
             jobfs = os.path.abspath(f"./gridwork_{grid_name}")
-    elif os.path.exists(jobfs):
+    if os.path.exists(jobfs):
         jobfs = os.path.abspath(jobfs)
     else:
         os.makedirs(jobfs)
