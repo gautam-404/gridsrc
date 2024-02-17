@@ -32,6 +32,8 @@ def untar_profiles(profile_tar, jobfs=None):
             jobfs = os.path.abspath(f"./gridwork_{grid_name}")
     elif os.path.exists(jobfs):
         jobfs = os.path.abspath(jobfs)
+    else:
+        os.makedirs(jobfs)
     if not os.path.exists(jobfs):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
     with tarfile.open(profile_tar, 'r:gz') as tar:
