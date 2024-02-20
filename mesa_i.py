@@ -74,7 +74,9 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
     overwrite : bool, optional
         Overwrite existing directories, by default False
     """
+    print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
+
     name_og = ''.join(name)
     archive_path = os.path.abspath(archive_path)
     os.environ["OMP_NUM_THREADS"] = str(cpu_this_process)
