@@ -4,15 +4,19 @@ import glob
 import tarfile
 import os
 
-def get_star_from_grid(m, z, v, grid='grid_archive'):
-    histfile = f'{grid}/histories/history_m{m}_z{z}_v{v}.data'
-    pindexfile = f'{grid}/profile_indexes/profiles_m{m}_z{z}_v{v}.index'
+def get_star_from_grid(m, z, v, param=None, grid='grid_archive'):
+    if param:
+        track_str = f'm{m}_z{z}_v{v}'
+    else:
+        track_str = f'm{m}_z{z}_v{v}_param{param}'
+    histfile = f'{grid}/histories/history_{track_str}.data'
+    pindexfile = f'{grid}/profile_indexes/profiles_{track_str}.index'
     history_df = pd.read_csv(histfile, skiprows=5, delim_whitespace=True)
     profile_index_df = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
 
 
     unified_df = pd.DataFrame()
-    with tarfile.open(f'{grid}/profiles/profiles_m{m}_z{z}_v{v}.tar.gz') as tar:
+    with tarfile.open(f'{grid}/profiles/profiles_{track_str}.tar.gz') as tar:
         profile_files = tar.getnames()
         for _, history_row in history_df.iterrows():
             model_number = history_row['model_number']
