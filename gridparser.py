@@ -14,7 +14,6 @@ def get_star_from_grid(m, z, v, param=None, grid='grid_archive'):
     history_df = pd.read_csv(histfile, skiprows=5, delim_whitespace=True)
     profile_index_df = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
 
-
     unified_df = pd.DataFrame()
     with tarfile.open(f'{grid}/profiles/profiles_{track_str}.tar.gz') as tar:
         profile_files = tar.getnames()
