@@ -27,7 +27,8 @@ def get_star_from_grid(m, z, v, grid='grid_archive'):
                 unified_df = pd.concat([unified_df, combined_df], axis=0, ignore_index=True)
     return unified_df
 
-def get_star(workdir='work/LOGS'):
+def get_star(workdir='work'):
+    workdir = os.path.join(os.path.abspath(workdir), 'LOGS')
     histfile = os.path.join(workdir, 'history.data')
     pindex = os.path.join(workdir, 'profiles.index')
 
