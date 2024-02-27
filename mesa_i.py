@@ -30,8 +30,8 @@ def check_if_done(name_og, archive_path):
         print(f"Track {name_og} not previously done. Running...")
         return False
 
-def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archive_path="grid_archive",
-               gyre_flag=False, logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
+def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="grid_archive",
+               logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
                uniform_rotation=True, additional_params={}, trace=None, overwrite=False):
     """
     dSct star evolution. Testing function. i'th track.
@@ -49,14 +49,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         Initial surface rotation velocity in km/s
     param : dict, optional
         Additional parameters to be set in inlist, by default {}
-    index : int, optional
-        Index of this track. 
-        If index is 0, those inlist files will be saved in the archive 
-        directory for future reference. Index is None by default.
     archive_path : str, optional
         Path to archive directory, by default "grid_archive"
-    gyre_flag : bool, optional
-        Run GYRE, by default False
     logging : bool, optional
         MESA-PORT logging, by default True
     parallel : bool, optional
@@ -267,21 +261,11 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         failed = False
 
     if not failed and not previously_done:
-        if gyre_flag:   
-            try:
-                res = run_gyre(proj, name, Zinit, cpu_this_process=cpu_this_process)
-                res = True if res == 0 else False
-            except Exception as e:
-                res = False
-                print("Gyre failed for track ", name_og)
-                print(e)
-            shutil.copy(f"{name}/gyre.log", archive_path+f"/gyre/gyre_{name_og}.log")
         shutil.copy(f"{name}/run.log", archive_path+f"/runlogs/run_{name_og}.log")
-        
         archiving_successful = False
         try:
             print("Archiving LOGS...")
-            helper.archive_LOGS(name, name_og, True, (gyre_flag and res), archive_path)
+            helper.archive_LOGS(name, name_og, True, False, archive_path)
             archive_successful = True
         except Exception as e:
             print("Archiving failed for track ", name_og)
@@ -292,32 +276,3 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                 f.write(f"LOGS archived!\n")
             else:
                 f.write(f"LOGS archiving failed!\n")
-
-def run_gyre(proj, name, Z, cpu_this_process=1):
-    start_time = time.time()
-    print("[bold green]Running GYRE...[/bold green]")
-    os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
-    os.environ['OMP_NUM_THREADS'] = '1'
-    file_format = "GSM"
-    profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format=file_format, run_on_cool=True)
-    if len(profiles) == 0:
-        file_format = "GYRE"
-        profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format=file_format, run_on_cool=True)
-    if len(profiles) > 0:
-        profiles = [profile.split('/')[-1] for profile in profiles]
-        res = proj.runGyre(gyre_in=os.path.expanduser("./src/templates/gyre_rot_template_ell3.in"), 
-                     files=profiles, data_format=file_format, wdir="LOGS",
-                    logging=True, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
-        with open(f"{name}/run.log", "a+") as f:
-            if res == True:
-                f.write(f"GYRE run complete!\n")
-            else:
-                f.write(f"GYRE failed!\n")
-    else:
-        res = False
-        with open(f"{name}/run.log", "a+") as f:
-            f.write(f"GYRE skipped: no profiles found, possibly because all models had T_eff < 6000 K\n")
-    end_time = time.time()
-    with open(f"{name}/gyre.log", "a+") as f:
-        f.write(f"Total time: {end_time-start_time} s\n\n")
-    return res
