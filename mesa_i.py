@@ -144,7 +144,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
-            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":50e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
+            star.load_Extras(f"{template_path}/run_star_extras_Dziembowski2.f")
+            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":100E+006}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
             max_timestep = [1e4, 1e6, 1e6, 2e6, 1E7]    ## For tests
@@ -203,49 +204,19 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                     #### RUN ####
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
-                    if phase_name == "Create Pre-MS Model":
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Initial/Pre-MS run
+                    reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"]
+                    shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                    if phase_name == reqd_phases[0]:
                         termination_code, age = proj.run(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                    elif phase_name == "Pre-MS Evolution":
+                    elif phase_name == reqd_phases[1]:
                         ## Initiate rotation
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Resume
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                    elif phase_name == "Early MS Evolution":
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Resume 
+                    elif phase_name in reqd_phases[2:3]:
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                        failed = False
-                    elif phase_name == "Evolution to TAMS":
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Resume 
-                        termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                        failed = False
-                        break
-                    # elif phase_name == "Evolution post-MS":
-                    #     ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                    #     shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                    #     ## Resume 
-                    #     termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                    #     print(f"End age: {age:.2e} yrs")
-                    #     print(f"Termination code: {termination_code}\n")
-                    #     failed = False
-                    #     break
+                    print(f"End age: {age:.2e} yrs")
+                    print(f"Termination code: {termination_code}\n")
                 except Exception as e:
                     failed = True
                     print(e)
@@ -343,3 +314,95 @@ def run_gyre(proj, name, Z, cpu_this_process=1):
     with open(f"{name}/gyre.log", "a+") as f:
         f.write(f"Total time: {end_time-start_time} s\n\n")
     return res
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Run parameter tests for MESA",
+                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-i", "--index", type=int, default=0, 
+                        help="Index of the parameter set to run")
+    parser.add_argument("-c", "--cores", type=int, default=1, 
+                        help="Number of cores to use per process")
+    parser.add_argument("-o", "--overwrite", action="store_true",
+                        help="Overwrite existing directories")
+    parser.add_argument("-d", "--directory", type=str, default="grid_archive",
+                        help="Name of the directory to save outputs")
+    args = parser.parse_args()
+    config = vars(args)
+    index = config["index"]
+    cpu_per_process = config["cores"]
+    overwrite = config["overwrite"]
+    archive_dir = config["directory"]
+
+    if index == 0 and overwrite:
+        overwrite = True
+    else:
+        overwrite = False
+
+    rewrite_input_file = True
+    if index == 0 and rewrite_input_file:
+        M_sample = [1.96, 1.98, 2.0, 2.2]
+        # M_sample = [1.2, 1.4, 1.6, 1.8, 2.0, 2.2]
+        # M_sample = [1.52]
+        # Z_sample = [0.008]
+        Z_sample = [0.014, 0.015, 0.016, 0.017, 0.018]
+        # Z_sample = [0.002, 0.006, 0.01, 0.014, 0.018, 0.022, 0.026]
+        V_sample = [8]
+        # param_samples = [{'overshoot_f(1)':0.045, 'overshoot_f0(1)':0.005},
+        #                     {'overshoot_f(1)':0.055, 'overshoot_f0(1)':0.005},
+        #                     {'overshoot_f(1)':0.065, 'overshoot_f0(1)':0.005},
+        #                     {'overshoot_f(1)':0.075, 'overshoot_f0(1)':0.005},
+        #                     {'overshoot_f(1)':0.085, 'overshoot_f0(1)':0.005}]
+        param_samples = [{'overshoot_f(1)':0.017, 'overshoot_f0(1)':0.002},
+                            {'overshoot_f(1)':0.022, 'overshoot_f0(1)':0.002},
+                            {'overshoot_f(1)':0.027, 'overshoot_f0(1)':0.002},
+                            {'overshoot_f(1)':0.032, 'overshoot_f0(1)':0.002}]
+        # param_samples = param_samples.ov_samples
+        combinations = list(product(M_sample, Z_sample, V_sample, param_samples))
+        # print("Number of combinations: ", len(combinations))
+        # exit()
+        
+
+        M = []
+        Z = []
+        V = []
+        params = []
+        names = []
+        for i, (m, z, v, param) in enumerate(combinations):
+            M.append(m)
+            Z.append(z)
+            V.append(v)
+            if param is not None:
+                params.append(param)
+                names.append(f"m{m}_z{z}_v{v}_param{param_samples.index(param)}")
+            else:
+                names.append(f"m{m}_z{z}_v{v}")
+
+        df = pd.DataFrame({"track": names, "M": M, "Z": Z, "V": V, "param": params}) if len(params)>0 else pd.DataFrame({"track": names, "M": M, "Z": Z, "V": V})
+        df.to_csv('track_inputs.csv', index=False)
+    df = pd.read_csv('track_inputs.csv')
+    name = df["track"].loc[index]
+    M = float(df["M"].loc[index])
+    Z = float(df["Z"].loc[index])
+    V = float(df["V"].loc[index])
+    param = eval(df["param"].loc[index]) if 'param' in df.columns else {}
+
+    additional_params = {}
+    # additional_params = {}
+
+    trace = ['surf_avg_v_rot', 'surf_avg_omega_div_omega_crit', 
+            'log_total_angular_momentum',
+            'surf_escape_v', 'log_g', 'log_R', 'star_mass']
+
+    evo_star_i(name=name, mass=M, metallicity=Z, v_surf_init=V, param=param, 
+               index=index, gyre_flag=False, logging=True, overwrite=overwrite,
+               parallel=False, cpu_this_process=cpu_per_process, trace=trace,
+               produce_track=True, uniform_rotation=True, additional_params=additional_params, archive_path=archive_dir)
+    
+    if index == 0:
+        shutil.copy("track_inputs.csv", archive_dir)
+
+    print("Done!")
+
+
