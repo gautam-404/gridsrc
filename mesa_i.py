@@ -306,7 +306,7 @@ def run_gyre(proj, name, Z, cpu_this_process=1):
     if len(profiles) > 0:
         profiles = [profile.split('/')[-1] for profile in profiles]
         res = proj.runGyre(gyre_in=os.path.expanduser("./src/templates/gyre_rot_template_ell3.in"), 
-                     files=profiles, data_format=file_format, profiles_dir="LOGS",
+                     files=profiles, data_format=file_format, wdir="LOGS",
                     logging=True, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
         with open(f"{name}/run.log", "a+") as f:
             if res == True:
