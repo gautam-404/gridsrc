@@ -30,8 +30,8 @@ def check_if_done(name_og, archive_path):
         print(f"Track {name_og} not previously done. Running...")
         return False
 
-def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archive_path="grid_archive",
-               gyre_flag=False, logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
+def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="grid_archive",
+               logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
                uniform_rotation=True, additional_params={}, trace=None, overwrite=False):
     """
     dSct star evolution. Testing function. i'th track.
@@ -49,14 +49,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         Initial surface rotation velocity in km/s
     param : dict, optional
         Additional parameters to be set in inlist, by default {}
-    index : int, optional
-        Index of this track. 
-        If index is 0, those inlist files will be saved in the archive 
-        directory for future reference. Index is None by default.
     archive_path : str, optional
         Path to archive directory, by default "grid_archive"
-    gyre_flag : bool, optional
-        Run GYRE, by default False
     logging : bool, optional
         MESA-PORT logging, by default True
     parallel : bool, optional
@@ -77,6 +71,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
     """
     print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
+
     name_og = ''.join(name)
     archive_path = os.path.abspath(archive_path)
     os.environ["OMP_NUM_THREADS"] = str(cpu_this_process)
@@ -91,7 +86,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
     HOME = os.environ["HOME"]
     if not os.path.exists(archive_path):
         helper.create_grid_dirs(overwrite=overwrite, archive_path=archive_path)
-    
+
     if "macOS" in platform.platform():
         grid_name = archive_path.split('/')[-1].split('grid_archive_')[-1]
         jobfs = os.path.abspath(f"./gridwork_{grid_name}")
@@ -220,7 +215,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                    elif phase_name in reqd_phases[2:3]:
+                    elif phase_name in reqd_phases[2]:
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
                     print(f"End age: {age:.2e} yrs")
                     print(f"Termination code: {termination_code}\n")
@@ -267,21 +262,11 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
         failed = False
 
     if not failed and not previously_done:
-        if gyre_flag:   
-            try:
-                res = run_gyre(proj, name, Zinit, cpu_this_process=cpu_this_process)
-                res = True if res == 0 else False
-            except Exception as e:
-                res = False
-                print("Gyre failed for track ", name_og)
-                print(e)
-            shutil.copy(f"{name}/gyre.log", archive_path+f"/gyre/gyre_{name_og}.log")
         shutil.copy(f"{name}/run.log", archive_path+f"/runlogs/run_{name_og}.log")
-        
         archiving_successful = False
         try:
             print("Archiving LOGS...")
-            helper.archive_LOGS(name, name_og, True, (gyre_flag and res), archive_path, remove=False)
+            helper.archive_LOGS(name, name_og, True, False, archive_path, remove=False)
             archive_successful = True
         except Exception as e:
             print("Archiving failed for track ", name_og)
@@ -292,124 +277,3 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                 f.write(f"LOGS archived!\n")
             else:
                 f.write(f"LOGS archiving failed!\n")
-
-def run_gyre(proj, name, Z, cpu_this_process=1):
-    start_time = time.time()
-    print("[bold green]Running GYRE...[/bold green]")
-    os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
-    os.environ['OMP_NUM_THREADS'] = '1'
-    file_format = "GSM"
-    profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format=file_format, run_on_cool=True)
-    if len(profiles) == 0:
-        file_format = "GYRE"
-        profiles, gyre_input_params = gyre.get_gyre_params(name, Z, file_format=file_format, run_on_cool=True)
-    if len(profiles) > 0:
-        profiles = [profile.split('/')[-1] for profile in profiles]
-        res = proj.runGyre(gyre_in=os.path.expanduser("./src/templates/gyre_rot_template_ell3.in"), 
-                     files=profiles, data_format=file_format, wdir="LOGS",
-                    logging=True, parallel=True, n_cores=cpu_this_process, gyre_input_params=gyre_input_params)
-        with open(f"{name}/run.log", "a+") as f:
-            if res == True:
-                f.write(f"GYRE run complete!\n")
-            else:
-                f.write(f"GYRE failed!\n")
-    else:
-        res = False
-        with open(f"{name}/run.log", "a+") as f:
-            f.write(f"GYRE skipped: no profiles found, possibly because all models had T_eff < 6000 K\n")
-    end_time = time.time()
-    with open(f"{name}/gyre.log", "a+") as f:
-        f.write(f"Total time: {end_time-start_time} s\n\n")
-    return res
-
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Run parameter tests for MESA",
-                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", "--index", type=int, default=0, 
-                        help="Index of the parameter set to run")
-    parser.add_argument("-c", "--cores", type=int, default=1, 
-                        help="Number of cores to use per process")
-    parser.add_argument("-o", "--overwrite", action="store_true",
-                        help="Overwrite existing directories")
-    parser.add_argument("-d", "--directory", type=str, default="grid_archive",
-                        help="Name of the directory to save outputs")
-    args = parser.parse_args()
-    config = vars(args)
-    index = config["index"]
-    cpu_per_process = config["cores"]
-    overwrite = config["overwrite"]
-    archive_dir = config["directory"]
-
-    if index == 0 and overwrite:
-        overwrite = True
-    else:
-        overwrite = False
-
-    rewrite_input_file = True
-    if index == 0 and rewrite_input_file:
-        M_sample = [1.96, 1.98, 2.0, 2.2]
-        # M_sample = [1.2, 1.4, 1.6, 1.8, 2.0, 2.2]
-        # M_sample = [1.52]
-        # Z_sample = [0.008]
-        Z_sample = [0.014, 0.015, 0.016, 0.017, 0.018]
-        # Z_sample = [0.002, 0.006, 0.01, 0.014, 0.018, 0.022, 0.026]
-        V_sample = [8]
-        # param_samples = [{'overshoot_f(1)':0.045, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.055, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.065, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.075, 'overshoot_f0(1)':0.005},
-        #                     {'overshoot_f(1)':0.085, 'overshoot_f0(1)':0.005}]
-        param_samples = [{'overshoot_f(1)':0.017, 'overshoot_f0(1)':0.002},
-                            {'overshoot_f(1)':0.022, 'overshoot_f0(1)':0.002},
-                            {'overshoot_f(1)':0.027, 'overshoot_f0(1)':0.002},
-                            {'overshoot_f(1)':0.032, 'overshoot_f0(1)':0.002}]
-        # param_samples = param_samples.ov_samples
-        combinations = list(product(M_sample, Z_sample, V_sample, param_samples))
-        # print("Number of combinations: ", len(combinations))
-        # exit()
-        
-
-        M = []
-        Z = []
-        V = []
-        params = []
-        names = []
-        for i, (m, z, v, param) in enumerate(combinations):
-            M.append(m)
-            Z.append(z)
-            V.append(v)
-            if param is not None:
-                params.append(param)
-                names.append(f"m{m}_z{z}_v{v}_param{param_samples.index(param)}")
-            else:
-                names.append(f"m{m}_z{z}_v{v}")
-
-        df = pd.DataFrame({"track": names, "M": M, "Z": Z, "V": V, "param": params}) if len(params)>0 else pd.DataFrame({"track": names, "M": M, "Z": Z, "V": V})
-        df.to_csv('track_inputs.csv', index=False)
-    df = pd.read_csv('track_inputs.csv')
-    name = df["track"].loc[index]
-    M = float(df["M"].loc[index])
-    Z = float(df["Z"].loc[index])
-    V = float(df["V"].loc[index])
-    param = eval(df["param"].loc[index]) if 'param' in df.columns else {}
-
-    additional_params = {}
-    # additional_params = {}
-
-    trace = ['surf_avg_v_rot', 'surf_avg_omega_div_omega_crit', 
-            'log_total_angular_momentum',
-            'surf_escape_v', 'log_g', 'log_R', 'star_mass']
-
-    evo_star_i(name=name, mass=M, metallicity=Z, v_surf_init=V, param=param, 
-               index=index, gyre_flag=False, logging=True, overwrite=overwrite,
-               parallel=False, cpu_this_process=cpu_per_process, trace=trace,
-               produce_track=True, uniform_rotation=True, additional_params=additional_params, archive_path=archive_dir)
-    
-    if index == 0:
-        shutil.copy("track_inputs.csv", archive_dir)
-
-    print("Done!")
-
-
