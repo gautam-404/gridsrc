@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import shutil
+import time
 
 
 def check_if_done(archive_dir, track):
@@ -152,13 +153,15 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
             print(f"{len(profiles)} profiles found to run GYRE on\n")
             
         os.environ['OMP_NUM_THREADS'] = '1'
-        # print(profiles)
-        # exit()
+        start_time = time.time()
         proj = ProjectOps()
         res = proj.runGyre(gyre_in=gyre_in, files=profiles,
                         gyre_input_params=gyre_input_params, wdir=profiles_dir,
                         parallel=True, n_cores=cpu_per_process,
                         data_format="GSM", logging=True)
+        end_time = time.time()
+        with open(f"{profiles_dir}/gyre.log", "a+") as f:
+            f.write(f"Total time: {end_time-start_time} s\n\n")
         if not res:
             raise RuntimeError("GYRE run failed")
         try:
