@@ -60,7 +60,6 @@ def phases_params(initial_mass, Zinit):
                     'create_pre_main_sequence_model': True, 'pre_ms_T_c': 9e5,
                     'set_uniform_initial_composition' : True, 'initial_zfracs' : 6,
                     'set_initial_model_number' : True, 'initial_model_number' : 0,
-                    # 'change_net' : True, 'new_net_name' : 'pp_and_hot_cno.net',  
                     'change_net' : True, 'new_net_name' : 'pp_and_hot_cno.net',  
                     'change_initial_net' : False, 'adjust_abundances_for_new_isos' : True,
                     # 'set_rates_preference' : True, 'new_rates_preference' : 2,   ## Not available in newer versions
