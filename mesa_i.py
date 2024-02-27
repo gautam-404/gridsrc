@@ -211,49 +211,19 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, index=None, archi
                     #### RUN ####
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
-                    if phase_name == "Create Pre-MS Model":
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Initial/Pre-MS run
+                    reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"]
+                    shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                    if phase_name == reqd_phases[0]:
                         termination_code, age = proj.run(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                    elif phase_name == "Pre-MS Evolution":
+                    elif phase_name == reqd_phases[1]:
                         ## Initiate rotation
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Resume
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                    elif phase_name == "Early MS Evolution":
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Resume 
+                    elif phase_name in reqd_phases[2:3]:
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                        failed = False
-                    elif phase_name == "Evolution to TAMS":
-                        ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                        shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                        ## Resume 
-                        termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                        print(f"End age: {age:.2e} yrs")
-                        print(f"Termination code: {termination_code}\n")
-                        failed = False
-                        break
-                    # elif phase_name == "Evolution post-MS":
-                    #     ## Save a copy of the inlist for reference. Needs to be done here so that phase information is retained
-                    #     shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
-                    #     ## Resume 
-                    #     termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                    #     print(f"End age: {age:.2e} yrs")
-                    #     print(f"Termination code: {termination_code}\n")
-                    #     failed = False
-                    #     break
+                    print(f"End age: {age:.2e} yrs")
+                    print(f"Termination code: {termination_code}\n")
                 except Exception as e:
                     failed = True
                     print(e)
