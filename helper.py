@@ -140,7 +140,7 @@ def cwd(path):
     finally:
         os.chdir(oldpwd)
 
-def archive_LOGS(name, track_index, save_track, gyre, archive_path, tracks_dir="/g/data/qq01/tracks"):
+def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/data/qq01/tracks"):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
