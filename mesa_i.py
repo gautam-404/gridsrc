@@ -146,6 +146,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
+            star.load_Extras(f"{template_path}/run_star_extras_Dziembowski2.f")
             stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":100e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
