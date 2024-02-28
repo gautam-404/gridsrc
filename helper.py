@@ -140,7 +140,7 @@ def cwd(path):
     finally:
         os.chdir(oldpwd)
 
-def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/data/qq01/tracks"):
+def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/data/qq01/tracks", remove=True):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
@@ -167,7 +167,8 @@ def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/dat
         # compressed_file = f"{tracks_dir}/track_{track_index}.tar.gz"
         # with tarfile.open(compressed_file, "w:gz") as tarhandle:
         #     tarhandle.add(name, arcname=os.path.basename(name))
-    shutil.rmtree(name)
+    if remove:
+        shutil.rmtree(name)
 
 
 def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
