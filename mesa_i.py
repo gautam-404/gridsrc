@@ -184,7 +184,6 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     star.set({"max_years_for_timestep": max_timestep.pop(0)}, force=True)
                     
                     ## Stopping conditions
-                    # stopping_condition = stopping_conditions.pop(0)
                     stopping_condition = stopping_conditions[phases_names.index(phase_name)]
                     if stopping_condition == "ERGB":
                         ergb_params = {'Teff_lower_limit' : 6000}
