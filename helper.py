@@ -160,6 +160,7 @@ def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/dat
         if len(gyre_profiles) > 0:
             for gyre_file in gyre_profiles:
                 shutil.copy(gyre_file, profiles_dir)
+        if len(osc_files) > 0:
             for osc_file in osc_files:
                 shutil.copy(osc_file, profiles_dir)
         with tarfile.open(f"{profiles_dir}.tar.gz", "w:gz") as tarhandle:
