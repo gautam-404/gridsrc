@@ -214,7 +214,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                    elif phase_name in reqd_phases[2:]:
+                    elif phase_name in reqd_phases[2:4]:
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
                     print(f"End age: {age:.2e} yrs")
                     print(f"Termination code: {termination_code}\n")
