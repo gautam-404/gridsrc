@@ -184,7 +184,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     star.set({"max_years_for_timestep": max_timestep.pop(0)}, force=True)
                     
                     ## Stopping conditions
-                    stopping_condition = stopping_conditions.pop(0)
+                    # stopping_condition = stopping_conditions.pop(0)
+                    stopping_condition = stopping_conditions[phases_names.index(phase_name)]
                     if  stopping_condition == "ERGB":
                         ergb_params = {'Teff_lower_limit' : 6000}
                         star.set(ergb_params, force=True)
@@ -205,6 +206,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     #### RUN ####
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
+                    stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":50e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
                     reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"]
                     shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
                     if phase_name == reqd_phases[0]:
@@ -214,7 +216,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                    elif phase_name in reqd_phases[2:3]:
+                    elif phase_name in reqd_phases[2:]:
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
                     print(f"End age: {age:.2e} yrs")
                     print(f"Termination code: {termination_code}\n")
