@@ -146,8 +146,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
-            star.load_Extras(f"{template_path}/run_star_extras_Dziembowski2.f")
-            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":100E+006}, {"stop_at_phase_TAMS":True}, "ERGB"]
+            stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":100e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
             # max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             # profile_interval = [1, 1, 1, 5, 5]
             max_timestep = [1e4, 1e6, 1e6, 2e6, 1E7]    ## For tests
@@ -185,8 +184,9 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     star.set({"max_years_for_timestep": max_timestep.pop(0)}, force=True)
                     
                     ## Stopping conditions
-                    stopping_condition = stopping_conditions.pop(0)
-                    if  stopping_condition == "ERGB":
+                    # stopping_condition = stopping_conditions.pop(0)
+                    stopping_condition = stopping_conditions[phases_names.index(phase_name)]
+                    if stopping_condition == "ERGB":
                         ergb_params = {'Teff_lower_limit' : 6000}
                         star.set(ergb_params, force=True)
                     else:
@@ -215,7 +215,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                         if v_surf_init>0:
                             star.set(rotation_init_params, force=True)
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
-                    elif phase_name in reqd_phases[2]:
+                    elif phase_name in reqd_phases[2:]:
                         termination_code, age = proj.resume(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
                     print(f"End age: {age:.2e} yrs")
                     print(f"Termination code: {termination_code}\n")
@@ -266,7 +266,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
         archiving_successful = False
         try:
             print("Archiving LOGS...")
-            helper.archive_LOGS(name, name_og, True, False, archive_path, remove=False)
+            helper.archive_LOGS(name, name_og, True, False, archive_path)
             archive_successful = True
         except Exception as e:
             print("Archiving failed for track ", name_og)
