@@ -186,7 +186,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     ## Stopping conditions
                     # stopping_condition = stopping_conditions.pop(0)
                     stopping_condition = stopping_conditions[phases_names.index(phase_name)]
-                    if  stopping_condition == "ERGB":
+                    if stopping_condition == "ERGB":
                         ergb_params = {'Teff_lower_limit' : 6000}
                         star.set(ergb_params, force=True)
                     else:
@@ -206,7 +206,6 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     #### RUN ####
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
-                    stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":50e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
                     reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"]
                     shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
                     if phase_name == reqd_phases[0]:
