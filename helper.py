@@ -145,15 +145,6 @@ def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/dat
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
     
-    if gyre:
-        gyre_archive = os.path.abspath(archive_path+f"/gyre/freqs_{track_index}")
-        if not os.path.exists(gyre_archive):
-            os.mkdir(gyre_archive)
-        for file in glob.glob(os.path.join(name, "LOGS/*-freqs.dat")):
-            shutil.copy(file, gyre_archive)
-        with tarfile.open(f"{gyre_archive}.tar.gz", "w:gz") as tarhandle:
-            tarhandle.add(gyre_archive, arcname=os.path.basename(gyre_archive))
-        shutil.rmtree(gyre_archive)
     if save_track:
         if not os.path.exists(profiles_dir):
             os.mkdir(profiles_dir)
