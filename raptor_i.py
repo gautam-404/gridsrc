@@ -42,7 +42,7 @@ def model_Dnu(ts):
     return np.round(Dnu, 3)
 
 
-def process_freqs_file(file, h_master, mode_labels, mode_strings):
+def process_freqs_file(file, h_master, mode_labels):
     ## Add empty mode labels
     ## All other straightforward methods of doing this gave performance warnings and fragmented dataframe
     ## Concat works fine
@@ -63,17 +63,27 @@ def process_freqs_file(file, h_master, mode_labels, mode_strings):
                     ts = pd.read_fwf(tar.extractfile(member), skiprows=5)
                     ts.drop(columns=["M_star", "R_star", "Im(freq)", "E_norm"], inplace=True)
                     ts.rename(columns={"Re(freq)": "freq"}, inplace=True)
-                    ts = ts[ts['n_g'] == 0].copy()
-                    ts['nlm'] = ts['n_pg'].astype(int).astype(str) + ts['l'].astype(int).astype(str) + ts['m'].astype(int).astype(str)
-
-                    if 'Dnu' not in h.columns:
-                        h['Dnu'] = model_Dnu(ts)
-                        h['eps'] = epsilon(ts)
-
-                    for i, s in enumerate(mode_strings):
-                        freq_values = ts[ts['nlm'] == s]['freq'].values
-                        if len(freq_values) > 0:
-                            h[mode_labels[i]] = np.round(freq_values[0], 5)
+                    for i, label in enumerate(mode_labels):
+                        # if 'ng' in label:
+                        #     n = None
+                        #     ng = int(label.split('ng')[-1][0])
+                        # else:
+                        #     ng = None
+                        #     n = int(label.split('n')[-1][0])
+                        n = int(label.split('n')[-1][0])
+                        l = int(label.split('ell')[-1][0])
+                        if 'mm' in label:
+                            m = - int(label.split('mm')[-1][0])
+                        else:
+                            m = 0
+                        # if ng is not None:
+                        #     freqs = ts.query(f"n_g == {ng} and l=={l} and m=={m}")['freq'].values
+                        # else:
+                        #     freqs = ts.query(f"n_pg == {n} and l=={l} and m=={m}")['freq'].values
+                        # freqs = ts.query(f"n_pg == {n} and l=={l} and m=={m}")['freq'].values
+                        freqs = ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['freq'].values
+                        if len(freqs) > 0:
+                            h[label] = np.round(freqs[0], 5)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)
     return h_final
@@ -83,8 +93,8 @@ def get_gyre_freqs(archive_dir, hist, suffix):
     file = os.path.join(archive_dir, 'gyre', f'freqs_{suffix}.tar.gz')
     l_max = 3
     mode_labels = []
-    for n in range(1, 11):
-        for l in range(0, l_max+1):
+    for l in range(0, l_max+1):
+        for n in range(1, 11):
             for m in range(-l, 1):
                 if m<0:
                     mode_labels.append(f"n{n}ell{l}mm{abs(m)}")
@@ -92,9 +102,17 @@ def get_gyre_freqs(archive_dir, hist, suffix):
                     mode_labels.append(f"n{n}ell{l}m0")
                 else:
                     pass
-    mode_strings = [f"{n}{l}{m}" for n in range(1, 11) for l in range(0, l_max+1) for m in range(-l, 1)]
-
-    hist = process_freqs_file(file, hist, mode_labels, mode_strings)
+    ## seperate g-modes
+    # for l in range(0, l_max+1):
+    #     for ng in range(1, 11):
+    #         for m in range(-l, 1):
+    #             if m<0:
+    #                 mode_labels.append(f"ng{ng}ell{l}mm{abs(m)}")
+    #             elif m==0:
+    #                 mode_labels.append(f"ng{ng}ell{l}m0")
+    #             else:
+    #                 pass
+    hist = process_freqs_file(file, hist, mode_labels)
     return hist
 
 
