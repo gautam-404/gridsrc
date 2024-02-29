@@ -61,9 +61,9 @@
 
 	freq_min_units = 'CYC_PER_DAY'
 	freq_max_units = 'CYC_PER_DAY'
-	freq_min = 15
+	freq_min = 5
 	freq_max = 95
-	n_freq = 60
+	n_freq = 200
 /
 
 &grid
