@@ -53,10 +53,10 @@ def load_data(param, param_idx=0, rot="uniform"):
         df_t['param_value'] = df_t.param.apply(lambda x: list(eval(x).values())[param_idx])
         df_t.to_feather(f"../minisauruses/{param}_{rot}.feather")
 
-    cols0 = [f for f in df_t.columns.values if "ell0m" in f]
-    cols1 = [f for f in df_t.columns.values if "ell1m" in f]
-    cols2 = [f for f in df_t.columns.values if "ell2m" in f]
-    cols3 = [f for f in df_t.columns.values if "ell3m" in f]
+    cols0 = [col for col in df_t.columns.values if "ell0m" in col and 'dfreq' not in col]
+    cols1 = [col for col in df_t.columns.values if "ell1m" in col and 'dfreq' not in col]
+    cols2 = [col for col in df_t.columns.values if "ell2m" in col and 'dfreq' not in col]
+    cols3 = [col for col in df_t.columns.values if "ell3m" in col and 'dfreq' not in col]
     return df_t, cols0, cols1, cols2, cols3, inputs, df_all
 
 
