@@ -32,7 +32,7 @@ def check_if_done(name_og, archive_path):
 
 def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="grid_archive",
                logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
-               uniform_rotation=True, additional_params={}, trace=None, overwrite=False):
+               uniform_rotation=True, additional_params={}, trace=None, overwrite=False, dev=False):
     """
     dSct star evolution. Testing function. i'th track.
 
@@ -141,8 +141,11 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
         retry_type, terminate_type = None, None
         failed_phase = None
         while retry<=total_retries and failed:
-            template_path = "./src/templates_dev"
-            # template_path = "./src/templates"
+            if dev:
+                template_path = "./src/templates_dev"
+                # star.load_Extras(f"{template_path}/run_star_extras_Dziembowski2.f")
+            else:
+                template_path = "./src/templates"
             inlist_file = f"{template_path}/inlist_template"
             star.load_HistoryColumns(f"{template_path}/history_columns.list")
             star.load_ProfileColumns(f"{template_path}/profile_columns.list")
@@ -266,7 +269,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
         archiving_successful = False
         try:
             print("Archiving LOGS...")
-            helper.archive_LOGS(name, name_og, True, archive_path, remove=False)
+            helper.archive_LOGS(name, name_og, True, archive_path, remove=(not dev))
             archiving_successful = True
             print("Done archiving.")
         except Exception as e:
