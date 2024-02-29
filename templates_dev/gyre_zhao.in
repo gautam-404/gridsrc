@@ -1,0 +1,79 @@
+&constants
+/
+
+&model
+	model_type = 'EVOL'       ! Obtain stellar structure from an evolutionary model
+	file = 'profile118.data.GYRE'
+	file_format = 'MESA'      ! File format of the evolutionary model
+        reconstruct_As = .False.  ! Use the Brunt-Vaisala frequency profile computed by MESA
+       ! uniform_rot = .True.      ! Apply a uniform rotation rate
+       ! Omega_uni = 0.0           ! rotation rate in rad/s; this value replaces any (lack of) information from the MESA model
+/
+
+&osc
+        outer_bound = 'ZERO'      ! Use a zero-pressure outer mechanical boundary condition; no wave-leaking allowed!
+      !  rotation_method = 'TRAD'  ! Method to apply the rotational frequency shift
+/
+
+&mode
+ l = 1
+     !   m = 1                     ! Azimuthal order possible to include
+     !   n_pg_min = -75            ! Minimum radial order n to be computed (if located in the scanned frequency range)
+     !  n_pg_max = -5             ! Maximum radial order n to be computed (if located in the scanned frequency range)
+/
+
+&num
+	ivp_solver = 'MAGNUS_GL2' ! 4th-order Magnus solver for initial-value integrations
+/
+
+&scan
+       ! grid_type = 'INVERSE'     ! Scan for modes using a uniform-in-period grid; best for g modes
+        grid_frame = 'COROT_I'    ! The computations are done in the corotating frame. 
+                                  ! For differential rotation the rotation frequency at the inner boundary 
+                                  ! is used as reference.
+        freq_units = 'PER_DAY'    ! The units of freq_min and freq_max are cycles/day
+        freq_frame = 'INERTIAL'   ! The frequencies in the output files are taken in the inertial frame
+  freq_min = 0.5            ! Minimum frequency of the scanned frequency range
+	freq_max = 50.0           ! Maximum frequency of the scanned frequency range
+	n_freq = 1000              ! Number of frequency points (bins) to be considered in the scanned range
+/
+
+&shoot_grid
+	op_type = 'CREATE_CLONE'	! Clone the (shooting) grid from the MESA input file
+/
+
+&recon_grid
+	op_type = 'CREATE_CLONE'	! Clone the (model) grid from the MESA input file
+/
+
+&shoot_grid
+	op_type = 'RESAMP_CENTER'	! Resample the grid at the center
+	n = 12				! At least 12 points in the evanescent region
+/
+
+&shoot_grid
+	op_type = 'RESAMP_DISPERSION'	! Resample the grid based on the local dispersion relation
+	alpha_osc = 5			! At least 5 points per oscillatory wavelength
+	alpha_exp = 1			! At least 1 point per exponential 'wavelength'
+/
+
+&recon_grid
+	op_type = 'RESAMP_CENTER'	! Resample the grid at the center
+	n = 12				! At least 12 points in the evanescent region
+/
+
+&recon_grid
+	op_type = 'RESAMP_DISPERSION'	! Resample the grid based on the local dispersion relation
+	alpha_osc = 5			! At least 5 points per oscillatory wavelength
+	alpha_exp = 1			! At least 1 point per exponential 'wavelength'
+/
+
+&output
+        summary_file = 'summary_profile118_nad_L1.txt'
+	summary_file_format = 'TXT'                                                  ! Format of summary file
+        summary_item_list = 'M_star,R_star,beta,l,n_pg,omega,freq,E_norm,W' ! Items to appear in summary file
+       mode_prefix = 'mode_profile118_nad_L1'
+	mode_file_format = 'TXT'                                                     ! Format of mode files
+        mode_item_list = 'M_star,R_star,L_star,l,beta,n_pg,n_p,n_g,omega,freq,x,xi_r,xi_h,K,dW_dx,nabla_ad'   	     ! Items to appear in mode files
+        freq_units = 'PER_DAY'                                                       ! Frequency unit is cycles/day
+/
