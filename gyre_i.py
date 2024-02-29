@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import shutil
 import time
+import platform
 
 
 def check_if_done(archive_dir, track):
@@ -24,13 +25,17 @@ def untar_profiles(profile_tar, jobfs=None):
     """
     if jobfs is None:
         HOME = os.environ["HOME"]
-        grid_name = profile_tar.split('/')[-3].split('grid_archive_')[-1]
-        try:
-            jobfs = os.path.join(os.environ["PBS_JOBFS"], f"gridwork_{grid_name}")
-        except KeyError:
-            jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
-        else:
+        # grid_name = profile_tar.split('/')[-3].split('grid_archive_')[-1]
+        grid_name = profile_tar.split('/')[-3].split('grid_')[-1]
+        if "macOS" in platform.platform():
             jobfs = os.path.abspath(f"./gridwork_{grid_name}")
+        else:
+            try:
+                jobfs = os.path.join(os.environ["PBS_JOBFS"], f"gridwork_{grid_name}")
+            except KeyError:
+                jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
+            else:
+                jobfs = os.path.abspath(f"./gridwork_{grid_name}")
     if os.path.exists(jobfs):
         jobfs = os.path.abspath(jobfs)
     else:

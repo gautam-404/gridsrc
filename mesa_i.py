@@ -88,7 +88,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
         helper.create_grid_dirs(overwrite=overwrite, archive_path=archive_path)
 
     if "macOS" in platform.platform():
-        grid_name = archive_path.split('/')[-1].split('grid_archive_')[-1]
+        grid_name = archive_path.split('/')[-1].split('grid_')[-1]
         jobfs = os.path.abspath(f"./gridwork_{grid_name}")
         name = os.path.join(jobfs, name_og)
     else:
