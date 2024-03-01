@@ -68,12 +68,12 @@
 	freq_frame = 'INERTIAL'
 	summary_file='SJM_GYRE_profile00.txt'
 	summary_file_format = 'TXT'
-	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot' ! Items to appear in summary file"
+	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot,omega,domega_rot' ! Items to appear in summary file"
 /
 
 &nad_output
 	freq_units = 'CYC_PER_DAY'
 	summary_file = 'freq_output_nonad.txt'
 	summary_file_format = 'TXT'
-	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot' ! Items to appear in summary file"
+	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot,omega,domega_rot' ! Items to appear in summary file"
 /
