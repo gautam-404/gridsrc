@@ -70,7 +70,7 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels):
                         freqs = ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['freq'].values
                         if len(freqs) > 0:
                             h[label] = np.round(freqs[0], 6)
-                            h[f'n{n}ell{l}dfreq'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq'].values[0], 6)
+                            h[f'n{n}ell{l}dfreq'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)
     return h_final
