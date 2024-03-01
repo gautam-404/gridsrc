@@ -74,7 +74,7 @@
 /
 
 &rot
-	coriolis_method = 'TAR'
+	coriolis_method = 'NULL'
 	Omega_rot_source = 'MODEL'
 	rossby = .FALSE.
 /
