@@ -42,12 +42,12 @@ def model_Dnu(ts):
     return np.round(Dnu, 3)
 
 
-def process_freqs_file(file, h_master, mode_labels):
+def process_freqs_file(file, h_master, mode_labels, other_labels):
     ## Add empty mode labels
     ## All other straightforward methods of doing this gave performance warnings and fragmented dataframe
     ## Concat works fine
-    nan_array = np.full((len(h_master), len(mode_labels)), np.nan)
-    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels)
+    nan_array = np.full((len(h_master), len(mode_labels+other_labels)), np.nan)
+    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+other_labels)
     h_master = pd.concat([h_master, new_cols_df], axis=1)
 
     ## Group by profile number
@@ -62,7 +62,7 @@ def process_freqs_file(file, h_master, mode_labels):
                     h = grouped_h_master.get_group(profile_number).copy()
                     ts = pd.read_fwf(tar.extractfile(member), skiprows=5)
                     ts.drop(columns=['M_star', 'R_star', 'Im(freq)', 'E_norm'], inplace=True)
-                    ts.rename(columns={'Re(freq)': 'freq', 'Re(domega_rot)': 'domega_rot',  'Re(domega)': 'omega'}, inplace=True)
+                    ts.rename(columns={'Re(freq)': 'freq', 'Re(domega_rot)': 'domega_rot',  'Re(omega)': 'omega'}, inplace=True)
                     for i, label in enumerate(mode_labels):
                         n = int(label.split('n')[-1][0])
                         l = int(label.split('ell')[-1][0])
@@ -73,10 +73,14 @@ def process_freqs_file(file, h_master, mode_labels):
                         freqs = ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['freq'].values
                         if len(freqs) > 0:
                             h.loc[:, label] = np.round([0], 6)
-                            h.loc[:, f'n{n}ell{l}omega'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['omega'].values[0], 6)
                             if m == 0:
-                                h.loc[:, f'n{n}ell{l}domega_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['domega_rot'].values[0], 6)
-                                h.loc[:, f'n{n}ell{l}dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
+                                h.loc[:, f'n{n}ell{l}m0_omega'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['omega'].values[0], 6)
+                                h.loc[:, f'n{n}ell{l}m0_domega_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['domega_rot'].values[0], 6)
+                                h.loc[:, f'n{n}ell{l}m0_dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
+                            else:
+                                h.loc[:, f'n{n}ell{l}mm{abs(m)}_omega'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['omega'].values[0], 6)
+                                h.loc[:, f'n{n}ell{l}mm{abs(m)}_domega_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['domega_rot'].values[0], 6)
+                                h.loc[:, f'n{n}ell{l}mm{abs(m)}_dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)
     return h_final
@@ -86,17 +90,26 @@ def get_gyre_freqs(archive_dir, hist, suffix):
     file = os.path.join(archive_dir, 'gyre', f'freqs_{suffix}.tar.gz')
     l_max = 3
     mode_labels = []
+    omega_labels = []
+    domega_labels = []
+    dfreq_labels = []
     for l in range(0, l_max+1):
         for n in range(1, 11):
             for m in range(-l, 1):
                 if m<0:
                     mode_labels.append(f'n{n}ell{l}mm{abs(m)}')
+                    omega_labels.append(f'n{n}ell{l}mm{abs(m)}_omega')
+                    domega_labels.append(f'n{n}ell{l}mm{abs(m)}_domega_rot')
+                    dfreq_labels.append(f'n{n}ell{l}mm{abs(m)}_dfreq_rot')
                 elif m==0:
                     mode_labels.append(f'n{n}ell{l}m0')
+                    omega_labels.append(f'n{n}ell{l}m0_omega')
+                    domega_labels.append(f'n{n}ell{l}m0_domega_rot')
+                    dfreq_labels.append(f'n{n}ell{l}m0_dfreq_rot')
                 else:
                     pass
-    
-    hist = process_freqs_file(file, hist, mode_labels)
+    other_labels = omega_labels + domega_labels + dfreq_labels
+    hist = process_freqs_file(file, hist, mode_labels, other_labels)
     return hist
 
 
