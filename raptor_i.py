@@ -62,7 +62,7 @@ def process_freqs_file(file, h_master, mode_labels):
                     h = grouped_h_master.get_group(profile_number).copy()
                     ts = pd.read_fwf(tar.extractfile(member), skiprows=5)
                     ts.drop(columns=['M_star', 'R_star', 'Im(freq)', 'E_norm'], inplace=True)
-                    ts.rename(columns={'Re(freq)': 'freq', 'Re(domega_rot)': 'domega_rot'}, inplace=True)
+                    ts.rename(columns={'Re(freq)': 'freq', 'Re(domega_rot)': 'domega_rot',  'Re(domega)': 'omega'}, inplace=True)
                     for i, label in enumerate(mode_labels):
                         n = int(label.split('n')[-1][0])
                         l = int(label.split('ell')[-1][0])
@@ -72,7 +72,8 @@ def process_freqs_file(file, h_master, mode_labels):
                             m = 0
                         freqs = ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['freq'].values
                         if len(freqs) > 0:
-                            h.loc[:, label] = np.round(freqs[0], 6)
+                            h.loc[:, label] = np.round([0], 6)
+                            h.loc[:, f'n{n}ell{l}omega'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['omega'].values[0], 6)
                             if m == 0:
                                 h.loc[:, f'n{n}ell{l}domega_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['domega_rot'].values[0], 6)
                                 h.loc[:, f'n{n}ell{l}dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
