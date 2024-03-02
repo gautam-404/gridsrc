@@ -64,8 +64,8 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
                     ts.drop(columns=['M_star', 'R_star', 'Im(freq)', 'E_norm'], inplace=True)
                     ts.rename(columns={'Re(freq)': 'freq'}, inplace=True)
                     for i, label in enumerate(mode_labels):
-                        n = int(label.split('n')[-1][0])
-                        l = int(label.split('ell')[-1][0])
+                        n = int(label.split('n')[-1].split('ell')[0])
+                        l = int(label.split('ell')[-1].split('m')[0])
                         m = 0
                         freq = ts.query(f'n_pg=={n} and l=={l} and m=={m}')['freq'].values
                         if len(freq) > 0:
