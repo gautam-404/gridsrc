@@ -42,12 +42,12 @@ def model_Dnu(ts):
     return np.round(Dnu, 3)
 
 
-def process_freqs_file(file, h_master, mode_labels, dfreq_labels):
+def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labels):
     ## Add empty mode labels
     ## All other straightforward methods of doing this gave performance warnings and fragmented dataframe
     ## Concat works fine
-    nan_array = np.full((len(h_master), len(mode_labels+dfreq_labels)), np.nan)
-    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+dfreq_labels)
+    nan_array = np.full((len(h_master), len(mode_labels+dfreq_labels+dfreq_rot_labels)), np.nan)
+    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+dfreq_labels+dfreq_rot_labels)
     h_master = pd.concat([h_master, new_cols_df], axis=1)
 
     ## Group by profile number
@@ -67,10 +67,18 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels):
                         n = int(label.split('n')[-1][0])
                         l = int(label.split('ell')[-1][0])
                         m = 0
-                        freqs = ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['freq'].values
-                        if len(freqs) > 0:
-                            h[label] = np.round(freqs[0], 6)
-                            h[f'n{n}ell{l}dfreq'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
+                        freq = ts.query(f'n_pg=={n} and l=={l} and m=={m}')['freq'].values
+                        if len(freq) > 0:
+                            h[label] = np.round(freq[0], 6)
+                            if l > 0:
+                                m_ = 1
+                                m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
+                                if len(m1freq) == 0:
+                                    m_ = -1
+                                    m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
+                                m1freq = np.round(m1freq[0], 6)
+                                h[f'n{n}ell{l}dfreq'] = freq[0] - m1freq
+                            h[f'n{n}ell{l}dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)
     return h_final
@@ -81,12 +89,14 @@ def get_gyre_freqs(archive_dir, hist, suffix):
     l_max = 3
     mode_labels = []
     dfreq_labels = []
+    dfreq_rot_labels = []
     for l in range(0, l_max+1):
         for n in range(1, 11):
             mode_labels.append(f'n{n}ell{l}m0')
-            dfreq_labels.append(f'n{n}ell{l}dfreq')
-    dfreq_labels
-    hist = process_freqs_file(file, hist, mode_labels, dfreq_labels)
+            dfreq_rot_labels.append(f'n{n}ell{l}dfreq_rot')
+            if l > 0:
+                dfreq_labels.append(f'n{n}ell{l}dfreq')
+    hist = process_freqs_file(file, hist, mode_labels, dfreq_labels, dfreq_rot_labels)
     return hist
 
 
