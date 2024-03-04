@@ -15,7 +15,7 @@
 
 &mode
 	l = 1
-	m = -1
+	m = 1
 /
 &mode
 	l = 1
@@ -24,7 +24,7 @@
 
 &mode
 	l = 2
-	m = -1
+	m = 1
 /
 &mode
 	l = 2
@@ -34,7 +34,7 @@
 
 &mode
 	l = 3
-	m = -1
+	m = 1
 /
 
 &mode
@@ -61,9 +61,9 @@
 
 	freq_min_units = 'CYC_PER_DAY'
 	freq_max_units = 'CYC_PER_DAY'
-	freq_min = 15
+	freq_min = 0
 	freq_max = 95
-	n_freq = 60
+	n_freq = 100
 /
 
 &grid
@@ -74,7 +74,7 @@
 /
 
 &rot
-	coriolis_method = 'TAR'
+	coriolis_method = 'NULL'
 	Omega_rot_source = 'MODEL'
 	rossby = .FALSE.
 /
@@ -84,12 +84,12 @@
 	freq_frame = 'INERTIAL'
 	summary_file='SJM_GYRE_profile00.txt'
 	summary_file_format = 'TXT'
-	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot,omega,domega_rot' ! Items to appear in summary file"
+	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot' ! Items to appear in summary file"
 /
 
 &nad_output
 	freq_units = 'CYC_PER_DAY'
 	summary_file = 'freq_output_nonad.txt'
 	summary_file_format = 'TXT'
-	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot,omega,domega_rot' ! Items to appear in summary file"
+	summary_item_list = 'M_star,R_star,l,m,n_pg,n_p,n_g,E_norm,freq,freq_units,dfreq_rot\' ! Items to appear in summary file"
 /
