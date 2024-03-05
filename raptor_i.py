@@ -46,8 +46,9 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
     ## Add empty mode labels
     ## All other straightforward methods of doing this gave performance warnings and fragmented dataframe
     ## Concat works fine
-    nan_array = np.full((len(h_master), len(mode_labels+dfreq_labels+dfreq_rot_labels)), np.nan)
-    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+dfreq_labels+dfreq_rot_labels)
+    extra_columns = ['omega', 'R_eq', 'R_polar', 'omega_c']
+    nan_array = np.full((len(h_master), len(mode_labels+dfreq_labels+dfreq_rot_labels+extra_columns)), np.nan)
+    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+dfreq_labels+dfreq_rot_labels+extra_columns)
     h_master = pd.concat([h_master, new_cols_df], axis=1)
 
     ## Group by profile number
@@ -135,6 +136,12 @@ def setup_and_run(archive_dir, index):
     
     h, suffix = get_hist(archive_dir, index)
     h = get_gyre_freqs(archive_dir, h, suffix)
+    h["omega"] = h["surf_avg_v_rot"]*1000*86400 / (np.power(10, h["log_R"])*6.957E08*2*np.pi)
+    h["R_eq"] = np.power(10, h["log_R"])
+    h["R_polar"] = h["R_eq"] / (1+0.5*np.power(h["omega"], 2))
+    h["omega_c"] = h["omega"] / h["surf_avg_omega_div_omega_crit"]
+    h.reset_index(drop=True, inplace=True)
+    h.drop(columns=["surf_avg_omega_div_omega_crit", "log_R"], inplace=True)
     h.to_csv(os.path.join(archive_dir, 'minisauruses', f'minisaurus_{suffix}.csv'), index=False)
     
 
