@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import tarfile
 import argparse
+import time
 
 
 def fit_radial(ts, degree=0):
@@ -132,6 +133,9 @@ def get_hist(archive_dir, index):
 
 
 def setup_and_run(archive_dir, index):
+    print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
+    print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
+
     print(f'Producing minisaurus for track index {index} in archive {archive_dir}\n')
     archive_dir = os.path.abspath(archive_dir)
     

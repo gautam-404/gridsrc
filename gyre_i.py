@@ -139,6 +139,9 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
     '''
     Run GYRE on a given archive with MESA profiles.
     '''
+    print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
+    print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
+    
     archive_dir = os.path.abspath(archive_dir)
     input_file = os.path.join(archive_dir, "track_inputs.csv")
     inputs = pd.read_csv(input_file)

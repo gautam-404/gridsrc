@@ -1,13 +1,10 @@
-import os, subprocess
+import os
 from mesaport import MesaAccess, ProjectOps
-import argparse
-from itertools import product
 import time
-import pandas as pd
 import shutil
 import platform
 
-from src import helper, gyre
+from src import helper
 from rich import print
 
 def teff_helper(star, retry):
