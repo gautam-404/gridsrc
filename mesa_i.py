@@ -93,11 +93,11 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
             jobfs = os.path.join(os.environ["PBS_JOBFS"], "gridwork")
             name = os.path.abspath(os.path.join(jobfs, name_og))
         except KeyError:
-            print('KeyError')
+            print('KeyError. PBS_JOBFS not found. Using TMPDIR.')
             jobfs = os.path.join(os.environ["TMPDIR"], "gridwork")
             name = os.path.abspath(os.path.join(jobfs, name_og))
         except Exception as e:
-            print('e')
+            print(e)
             grid_name = archive_path.split('/')[-1].split('grid_archive_')[-1]
             jobfs = os.path.abspath(f"./gridwork_{grid_name}")
             name = os.path.join(jobfs, name_og)

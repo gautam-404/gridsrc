@@ -33,6 +33,7 @@ def untar_profiles(profile_tar, jobfs=None):
             try:
                 jobfs = os.path.join(os.environ["PBS_JOBFS"], f"gridwork_{grid_name}")
             except KeyError:
+                print('KeyError. PBS_JOBFS not found. Using TMPDIR.')
                 jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
             except Exception as e:
                 print(e)
@@ -141,7 +142,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
     '''
     print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
-    
+
     archive_dir = os.path.abspath(archive_dir)
     input_file = os.path.join(archive_dir, "track_inputs.csv")
     inputs = pd.read_csv(input_file)
