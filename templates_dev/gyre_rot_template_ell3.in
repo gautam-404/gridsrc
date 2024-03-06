@@ -13,30 +13,29 @@
 /
 
 
-&mode
-	l = 1
-	m = 1
-/
+! &mode
+! 	l = 1
+! 	m = 1
+! /
 &mode
 	l = 1
 	m = 0
 /
 
-&mode
-	l = 2
-	m = 1
-/
+! &mode
+! 	l = 2
+! 	m = 1
+! /
 &mode
 	l = 2
 	m = 0
 /
 
 
-&mode
-	l = 3
-	m = 1
-/
-
+! &mode
+! 	l = 3
+! 	m = 1
+! /
 &mode
 	l = 3
 	m = 0
@@ -63,7 +62,7 @@
 	freq_max_units = 'CYC_PER_DAY'
 	freq_min = 0
 	freq_max = 95
-	n_freq = 200
+	n_freq = 100
 /
 
 &grid

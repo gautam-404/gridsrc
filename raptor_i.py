@@ -71,15 +71,16 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
                         freq = ts.query(f'n_pg=={n} and l=={l} and m=={m}')['freq'].values
                         if len(freq) > 0:
                             h[label] = np.round(freq[0], 6)
-                            if l > 0:
-                                m_ = 1
-                                m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
-                                if len(m1freq) == 0:
-                                    m_ = -1
-                                    m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
-                                if len(m1freq) > 0:
-                                    m1freq = np.round(m1freq[0], 6)
-                                    h[f'n{n}ell{l}dfreq'] = abs(freq[0] - m1freq)
+                            ### If dfreq needs to be calculated
+                            # if l > 0:
+                            #     m_ = 1
+                            #     m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
+                            #     if len(m1freq) == 0:
+                            #         m_ = -1
+                            #         m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
+                            #     if len(m1freq) > 0:
+                            #         m1freq = np.round(m1freq[0], 6)
+                            #         h[f'n{n}ell{l}dfreq'] = abs(freq[0] - m1freq)
                             h[f'n{n}ell{l}dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)
@@ -96,8 +97,8 @@ def get_gyre_freqs(archive_dir, hist, suffix):
         for n in range(1, 11):
             mode_labels.append(f'n{n}ell{l}m0')
             dfreq_rot_labels.append(f'n{n}ell{l}dfreq_rot')
-            if l > 0:
-                dfreq_labels.append(f'n{n}ell{l}dfreq')
+            # if l > 0:
+            #     dfreq_labels.append(f'n{n}ell{l}dfreq')
     hist = process_freqs_file(file, hist, mode_labels, dfreq_labels, dfreq_rot_labels)
     return hist
 
