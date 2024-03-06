@@ -5,7 +5,7 @@ import tarfile
 import os
 
 def get_star_from_grid(m, z, v, param=None, grid='grid_archive', min_age_yrs=None, max_age_yrs=None):
-    if param:
+    if not param:
         track_str = f'm{m}_z{z}_v{v}'
     else:
         track_str = f'm{m}_z{z}_v{v}_param{param}'
