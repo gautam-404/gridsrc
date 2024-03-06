@@ -144,10 +144,11 @@ def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/dat
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
+    tmp_profiles_dir = os.path.abspath(os.path.join(name, 'tmp_profiles'))
     
     if save_track:
-        if not os.path.exists(profiles_dir):
-            os.mkdir(profiles_dir)
+        if not os.path.exists(tmp_profiles_dir):
+            os.mkdir(tmp_profiles_dir)
 
         mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
         gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
@@ -155,18 +156,13 @@ def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/dat
             gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GYRE"))
         
         for mesa_file in mesa_profiles:
-            shutil.copy(mesa_file, profiles_dir)
+            shutil.copy(mesa_file, tmp_profiles_dir)
         if len(gyre_profiles) > 0:
             for gyre_file in gyre_profiles:
-                shutil.copy(gyre_file, profiles_dir)
+                shutil.copy(gyre_file, tmp_profiles_dir)
         with tarfile.open(f"{profiles_dir}.tar.gz", "w:gz") as tarhandle:
-            tarhandle.add(profiles_dir, arcname=os.path.basename(profiles_dir))
-        shutil.rmtree(profiles_dir)
-        # if not os.path.exists(tracks_dir):
-        #     os.mkdir(tracks_dir)
-        # compressed_file = f"{tracks_dir}/track_{track_index}.tar.gz"
-        # with tarfile.open(compressed_file, "w:gz") as tarhandle:
-        #     tarhandle.add(name, arcname=os.path.basename(name))
+            tarhandle.add(tmp_profiles_dir, arcname=os.path.basename(profiles_dir))
+        shutil.rmtree(tmp_profiles_dir)
     if remove:
         shutil.rmtree(name)
 
