@@ -3,6 +3,7 @@ from mesaport import MesaAccess, ProjectOps
 import time
 import shutil
 import platform
+import tarfile
 
 from src import helper
 from rich import print
@@ -18,6 +19,12 @@ def check_if_done(name_og, archive_path):
     archive_path = os.path.abspath(archive_path)
     runlog_present = os.path.exists(archive_path+f"/runlogs/run_{name_og}.log")
     profiles_archived = os.path.exists(archive_path+f"/profiles/profiles_{name_og}.tar.gz") and os.path.exists(archive_path+f"/profile_indexes/profiles_{name_og}.index")
+    if profiles_archived:
+        with tarfile.open(archive_path+f"/profiles/profiles_{name_og}.tar.gz", "r:gz") as tar:
+            if len(tar.getnames()) > 0:
+                profiles_archived = True
+            else:
+                profiles_archived = False
     history_present = os.path.exists(archive_path+f"/histories/history_{name_og}.data")
     failed = os.path.exists(archive_path+f"/failed/run_{name_og}.log")
     if runlog_present and profiles_archived and history_present and not failed:

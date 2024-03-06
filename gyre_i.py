@@ -15,7 +15,11 @@ def check_if_done(archive_dir, track):
     Check if GYRE has already been run on the given archive.
     '''
     if os.path.exists(f"{archive_dir}/gyre/freqs_{track}.tar.gz"):
-        return True
+        with tarfile.open(f"{archive_dir}/gyre/freqs_{track}.tar.gz", "r:gz") as tar:
+            if len(tar.getnames()) > 0:
+                return True
+            else:
+                return False
     else:
         return False
 
@@ -154,7 +158,6 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
         zinit = float(track.split('_')[1].split('z')[-1])
 
         profiles, gyre_input_params = get_gyre_params_archived(archive_dir, suffix=track, zinit=zinit, file_format="GSM", run_on_cool=True)
-        # print(gyre_input_params)
         profiles_dir = untar_profiles(profile_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
 
         if len(profiles) == 0:
