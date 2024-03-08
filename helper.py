@@ -139,32 +139,26 @@ def cwd(path):
         yield
     finally:
         os.chdir(oldpwd)
+        
 
-def archive_LOGS(name, track_index, save_track, archive_path, tracks_dir="/g/data/qq01/tracks", remove=True):
+def archive_LOGS(name, track_index, archive_path, tracks_dir="/g/data/qq01/tracks", remove=True):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
-    tmp_profiles_dir = os.path.abspath(os.path.join(name, 'tmp_profiles'))
-    
-    if save_track:
-        if not os.path.exists(tmp_profiles_dir):
-            os.mkdir(tmp_profiles_dir)
 
-        mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
-        gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
-        if len(gyre_profiles) == 0:
-            gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GYRE"))
-        
+    mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
+    gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
+    if len(gyre_profiles) == 0:
+        gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GYRE"))
+
+    with tarfile.open(f"{profiles_dir}.tar.gz", "w:gz") as tarhandle:
         for mesa_file in mesa_profiles:
-            shutil.copy(mesa_file, tmp_profiles_dir)
-        if len(gyre_profiles) > 0:
-            for gyre_file in gyre_profiles:
-                shutil.copy(gyre_file, tmp_profiles_dir)
-        with tarfile.open(f"{profiles_dir}.tar.gz", "w:gz") as tarhandle:
-            tarhandle.add(tmp_profiles_dir, arcname=os.path.basename(profiles_dir))
-        shutil.rmtree(tmp_profiles_dir)
+            tarhandle.add(mesa_file, arcname=os.path.basename(mesa_file))
+        for gyre_file in gyre_profiles:
+            tarhandle.add(gyre_file, arcname=os.path.basename(gyre_file))
     if remove:
         shutil.rmtree(name)
+
 
 
 def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
@@ -183,12 +177,12 @@ def create_grid_dirs(overwrite=False, archive_path="grid_archive"):
             except:
                 pass
         os.mkdir(archive_path)
-        for dir_ in ["tracks", "histories", "profile_indexes", "profiles", "gyre", "failed", "runlogs", "inlists"]:
+        for dir_ in ["histories", "profile_indexes", "profiles", "gyre", "failed", "runlogs", "inlists"]:
             os.mkdir(os.path.join(archive_path, dir_))
     else:
         if not os.path.exists(archive_path):
             os.mkdir(archive_path)
-            for dir_ in ["tracks", "histories", "profile_indexes", "profiles", "gyre", "failed", "runlogs", "inlists"]:
+            for dir_ in ["histories", "profile_indexes", "profiles", "gyre", "failed", "runlogs", "inlists"]:
                 if not os.path.exists(os.path.join(archive_path, dir_)):
                     os.mkdir(os.path.join(archive_path, dir_))
 

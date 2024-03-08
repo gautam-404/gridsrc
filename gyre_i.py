@@ -175,16 +175,17 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
         end_time = time.time()
         with open(f"{profiles_dir}/gyre.log", "a+") as f:
             f.write(f"Total time: {end_time-start_time} s\n\n")
+
         if not res:
             raise RuntimeError("GYRE run failed")
         try:
             save_gyre_outputs(profiles_dir, archive_dir, track)
+            print("GYRE outputs saved\n")
         except Exception as e:
             print(e)
             print("Failed to save GYRE outputs")
         else:
             shutil.rmtree(profiles_dir)
-            print("GYRE outputs saved\n")
 
 
 if __name__ == "__main__":
