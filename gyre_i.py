@@ -48,9 +48,10 @@ def untar_profiles(profile_tar, jobfs=None):
         os.makedirs(jobfs)
     if not os.path.exists(jobfs):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
+    profile_dir = os.path.join(jobfs, profile_tar.split('/')[-1].split('.tar.gz')[0])
     with tarfile.open(profile_tar, 'r:gz') as tar:
-        tar.extractall(path=jobfs)
-    return os.path.join(jobfs, profile_tar.split('/')[-1].split('.tar.gz')[0])
+        tar.extractall(path=profile_dir)
+    return profile_dir
 
 def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
     '''
