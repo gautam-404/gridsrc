@@ -144,8 +144,9 @@ def cwd(path):
 def archive_LOGS(name, track_index, archive_path, tracks_dir="/g/data/qq01/tracks", remove=True):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
-    tmp_profiles_dir = os.path.abspath(os.path.join(archive_path, f"profiles_{track_index}"))
-    profiles_tar = os.path.abspath(os.path.join(archive_path, f"/profiles/profiles_{track_index}.tar.gz"))
+    archive_path = os.path.abspath(archive_path)
+    tmp_profiles_dir = os.path.join(archive_path, f"profiles_{track_index}")
+    profiles_dir = os.path.join(archive_path, "profiles")
 
     mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
     gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
@@ -157,7 +158,7 @@ def archive_LOGS(name, track_index, archive_path, tracks_dir="/g/data/qq01/track
             tarhandle.add(mesa_file)
         for gyre_file in gyre_profiles:
             tarhandle.add(gyre_file)
-    shutil.move(f"{tmp_profiles_dir}.tar.gz", profiles_tar)
+    shutil.move(f"{tmp_profiles_dir}.tar.gz", profiles_dir)
     if remove:
         shutil.rmtree(name)
 
