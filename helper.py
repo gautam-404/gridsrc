@@ -144,18 +144,20 @@ def cwd(path):
 def archive_LOGS(name, track_index, archive_path, tracks_dir="/g/data/qq01/tracks", remove=True):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
-    profiles_dir = os.path.abspath(archive_path+f"/profiles/profiles_{track_index}")
+    tmp_profiles_dir = os.path.abspath(os.path.join(archive_path, f"profiles_{track_index}"))
+    profiles_tar = os.path.abspath(os.path.join(archive_path, f"/profiles/profiles_{track_index}.tar.gz"))
 
     mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
     gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GSM"))
     if len(gyre_profiles) == 0:
         gyre_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data.GYRE"))
 
-    with tarfile.open(f"{profiles_dir}.tar.gz", "w:gz") as tarhandle:
+    with tarfile.open(f"{tmp_profiles_dir}.tar.gz", "w:gz") as tarhandle:
         for mesa_file in mesa_profiles:
-            tarhandle.add(mesa_file, arcname=os.path.basename(mesa_file))
+            tarhandle.add(mesa_file)
         for gyre_file in gyre_profiles:
-            tarhandle.add(gyre_file, arcname=os.path.basename(gyre_file))
+            tarhandle.add(gyre_file)
+    shutil.move(f"{tmp_profiles_dir}.tar.gz", profiles_tar)
     if remove:
         shutil.rmtree(name)
 
