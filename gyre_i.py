@@ -27,6 +27,7 @@ def untar_profiles(profile_tar, jobfs=None):
     """
     Untar all the profiles from a tarball into the jobfs directory.
     """
+    print("Untarring profile files")
     if jobfs is None:
         HOME = os.environ["HOME"]
         # grid_name = profile_tar.split('/')[-3].split('grid_archive_')[-1]
@@ -48,9 +49,13 @@ def untar_profiles(profile_tar, jobfs=None):
         os.makedirs(jobfs)
     if not os.path.exists(jobfs):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
+    
     profile_dir = os.path.join(jobfs, profile_tar.split('/')[-1].split('.tar.gz')[0])
     with tarfile.open(profile_tar, 'r:gz') as tar:
-        tar.extractall(path=profile_dir)
+        members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
+        tar.extractall(path=profile_dir, members=members)
+    if len(glob.glob(f"{profile_dir}/*")) == 0:
+        raise RuntimeError("No profiles found in the tarball")
     return profile_dir
 
 def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
@@ -141,7 +146,7 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     else:
         raise RuntimeError("No GYRE frequency files found")
     
-def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
+def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_format="GSM"):
     '''
     Run GYRE on a given archive with MESA profiles.
     '''
@@ -158,13 +163,12 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
     else:
         zinit = float(track.split('_')[1].split('z')[-1])
 
-        profiles, gyre_input_params = get_gyre_params_archived(archive_dir, suffix=track, zinit=zinit, file_format="GSM", run_on_cool=True)
-        profiles_dir = untar_profiles(profile_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
-
+        profiles, gyre_input_params = get_gyre_params_archived(archive_dir, suffix=track, zinit=zinit, file_format=file_format, run_on_cool=True)
         if len(profiles) == 0:
             raise RuntimeError("No profiles to run GYRE on")
         else:
             print(f"{len(profiles)} profiles found to run GYRE on\n")
+        profiles_dir = untar_profiles(profile_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
             
         os.environ['OMP_NUM_THREADS'] = '1'
         start_time = time.time()
@@ -172,7 +176,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
         res = proj.runGyre(gyre_in=gyre_in, files=profiles,
                         gyre_input_params=gyre_input_params, wdir=profiles_dir,
                         parallel=True, n_cores=cpu_per_process,
-                        data_format="GSM", logging=True)
+                        data_format=file_format, logging=True)
         end_time = time.time()
         with open(f"{profiles_dir}/gyre.log", "a+") as f:
             f.write(f"Total time: {end_time-start_time} s\n\n")
@@ -184,7 +188,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None):
             print("GYRE outputs saved\n")
         except Exception as e:
             print(e)
-            print("Failed to save GYRE outputs")
+            raise RuntimeError("Failed to save GYRE outputs")
         else:
             shutil.rmtree(profiles_dir)
 
