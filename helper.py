@@ -141,11 +141,11 @@ def cwd(path):
         os.chdir(oldpwd)
         
 
-def archive_LOGS(name, track_index, archive_path, tracks_dir="/g/data/qq01/tracks", remove=True):
+def archive_LOGS(name, track_index, archive_path, jobfs, remove=True):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     archive_path = os.path.abspath(archive_path)
-    tmp_profiles_dir = os.path.join(archive_path, f"profiles_{track_index}")
+    tmp_profiles_dir = os.path.join(jobfs, f"profiles_{track_index}")
     profiles_dir = os.path.join(archive_path, "profiles")
 
     mesa_profiles = glob.glob(os.path.join(name, "LOGS/profile*.data"))
