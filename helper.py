@@ -145,15 +145,12 @@ def archive_LOGS(name, track_index, archive_path, jobfs, remove=True):
     shutil.copy(f"{name}/LOGS/history.data", archive_path+f"/histories/history_{track_index}.data")
     shutil.copy(f"{name}/LOGS/profiles.index", archive_path+f"/profile_indexes/profiles_{track_index}.index")
     archive_path = os.path.abspath(archive_path)
-    tmp_profiles_tar = os.path.join(jobfs, f"profiles_{track_index}.tar.gz")
-    profiles_dir = os.path.join(archive_path, "profiles")
+    profiles_tar = os.path.join(archive_path, "profiles", f"profiles_{track_index}.tar.gz")
 
-    if not os.path.exists(tmp_profiles_tar):
-        with tarfile.open(tmp_profiles_tar, "w:gz") as tarhandle:
-            tarhandle.add(f"{name}/LOGS", arcname=f"profiles_{track_index}")
-        if os.path.exists(os.path.join(profiles_dir, f"profiles_{track_index}.tar.gz")):
-            os.remove(os.path.join(profiles_dir, f"profiles_{track_index}.tar.gz"))
-        shutil.move(tmp_profiles_tar, profiles_dir)
+    if os.path.exists(profiles_tar):
+        os.remove(profiles_tar)
+    with tarfile.open(profiles_tar, "w:gz") as tarhandle:
+        tarhandle.add(f"{name}/LOGS", arcname=f"profiles_{track_index}", recursive=True)
     if remove:
         shutil.rmtree(name)
 
