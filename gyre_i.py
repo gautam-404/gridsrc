@@ -41,9 +41,9 @@ def untar_profiles(profile_tar, jobfs=None):
         else:
             try:
                 jobfs = os.path.join(os.environ["PBS_JOBFS"], f"gridwork_{grid_name}")
-            except KeyError:
-                print('KeyError. PBS_JOBFS not found. Using TMPDIR.')
-                jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
+            # except KeyError:
+            #     print('KeyError. PBS_JOBFS not found. Using TMPDIR.')
+            #     jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
             except Exception as e:
                 print(e)
                 jobfs = os.path.abspath(f"./gridwork_{grid_name}")
@@ -57,7 +57,7 @@ def untar_profiles(profile_tar, jobfs=None):
     profile_dir = os.path.join(jobfs, profile_tar.split('/')[-1].split('.tar.gz')[0])
     with tarfile.open(profile_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
-        tar.extractall(path=profile_dir, members=members)
+        tar.extractall(path=jobfs, members=members)
     if len(glob.glob(f"{profile_dir}/*")) == 0:
         raise RuntimeError("No profiles found in the tarball")
     return profile_dir
