@@ -15,11 +15,15 @@ def check_if_done(archive_dir, track):
     Check if GYRE has already been run on the given archive.
     '''
     if os.path.exists(f"{archive_dir}/gyre/freqs_{track}.tar.gz"):
-        with tarfile.open(f"{archive_dir}/gyre/freqs_{track}.tar.gz", "r:gz") as tar:
-            if len(tar.getnames()) > 0:
-                return True
-            else:
-                return False
+        try:
+            with tarfile.open(f"{archive_dir}/gyre/freqs_{track}.tar.gz", "r:gz") as tar:
+                if len(tar.getnames()) > 0:
+                    return True
+                else:
+                    return False
+        except:
+            print("Error reading previously saved freqs tar")
+            return False
     else:
         return False
 
