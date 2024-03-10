@@ -13,13 +13,13 @@ import os, sys
 
 
 def load_data(param, param_idx=0, rot="uniform"):
-    inputs = pd.read_csv(f'../minisauruses/track_inputs_{param}_{rot}.csv')
-    if os.path.isfile(f"../minisauruses/{param}_{rot}.feather"):
-        df_t = pd.read_feather(f"../minisauruses/{param}_{rot}.feather")
+    inputs = pd.read_csv(f'../minisauruses/{param}/track_inputs_{param}_{rot}.csv')
+    if os.path.isfile(f"../minisauruses/{param}/{param}_{rot}.feather"):
+        df_t = pd.read_feather(f"../minisauruses/{param}/{param}_{rot}.feather")
         df_all = df_t
     else:
-        df_all = pd.read_csv(f'../minisauruses/minisaurus_{param}_{rot}.csv')
-        cols = ['m', 'z', 'v', 'surf_avg_v_rot', 'surf_avg_omega_div_omega_crit', 
+        df_all = pd.read_csv(f'../minisauruses/{param}/minisaurus_{param}_{rot}.csv')
+        cols = ['m', 'z', 'v', 'surf_avg_v_rot', 'omega', 'R_eq', 'R_polar', 'omega_c',
             'run_time', 'param',
             'density', 'log_Teff', 'tr_num', 'Myr', 'n1ell0m0', 'n2ell0m0', 'n3ell0m0', 'n4ell0m0', 'n5ell0m0',
             'n6ell0m0', 'n7ell0m0', 'n8ell0m0', 'n9ell0m0', 'n10ell0m0', 'n1ell1m0',
@@ -28,21 +28,22 @@ def load_data(param, param_idx=0, rot="uniform"):
                 'n4ell2m0', 'n5ell2m0', 'n6ell2m0', 'n7ell2m0', 'n8ell2m0', 'n9ell2m0',
                 'n10ell2m0', 'n1ell3m0', 'n2ell3m0', 'n3ell3m0', 'n4ell3m0', 'n5ell3m0',
                     'n6ell3m0', 'n7ell3m0', 'n8ell3m0', 'n9ell3m0', 'n10ell3m0',
-            'n1ell1dfreq', 'n2ell1dfreq', 'n3ell1dfreq', 'n4ell1dfreq', 'n5ell1dfreq',
-            'n6ell1dfreq', 'n7ell1dfreq', 'n8ell1dfreq', 'n9ell1dfreq',
-            'n10ell1dfreq', 'n1ell2dfreq', 'n2ell2dfreq', 'n3ell2dfreq',
-                'n4ell2dfreq', 'n5ell2dfreq', 'n6ell2dfreq', 'n7ell2dfreq',
-                    'n8ell2dfreq', 'n9ell2dfreq', 'n10ell2dfreq', 'n1ell3dfreq',
-                'n2ell3dfreq', 'n3ell3dfreq', 'n4ell3dfreq', 'n5ell3dfreq',
-                    'n6ell3dfreq', 'n7ell3dfreq', 'n8ell3dfreq', 'n9ell3dfreq',
-                    'n10ell3dfreq', 'Dnu', 'eps']
+            'n1ell1dfreq_rot', 'n2ell1dfreq_rot', 'n3ell1dfreq_rot', 'n4ell1dfreq_rot', 'n5ell1dfreq_rot',
+            'n6ell1dfreq_rot', 'n7ell1dfreq_rot', 'n8ell1dfreq_rot', 'n9ell1dfreq_rot',
+            'n10ell1dfreq_rot', 'n1ell2dfreq_rot', 'n2ell2dfreq_rot', 'n3ell2dfreq_rot',
+                'n4ell2dfreq_rot', 'n5ell2dfreq_rot', 'n6ell2dfreq_rot', 'n7ell2dfreq_rot',
+                    'n8ell2dfreq_rot', 'n9ell2dfreq_rot', 'n10ell2dfreq_rot', 'n1ell3dfreq_rot',
+                'n2ell3dfreq_rot', 'n3ell3dfreq_rot', 'n4ell3dfreq_rot', 'n5ell3dfreq_rot',
+                    'n6ell3dfreq_rot', 'n7ell3dfreq_rot', 'n8ell3dfreq_rot', 'n9ell3dfreq_rot',
+                    'n10ell3dfreq_rot', 'Dnu', 'eps']
         l_max = 3
         for n in range(1, 11):
             for l in range(0, l_max+1):
-                for m in range(-l, 0):
+                for m in range(-l, l+1):
                     if f"n{n}ell{l}m0" in df_all.columns.values:
-                        df_all = df_all.assign(**{f"n{n}ell{l}mm{abs(m)}": df_all[f"n{n}ell{l}m0"] - df_all[f"n{n}ell{l}dfreq"]})
-                        df_all = df_all.assign(**{f"n{n}ell{l}mp{abs(m)}": df_all[f"n{n}ell{l}m0"] + df_all[f"n{n}ell{l}dfreq"]})
+                        # df_all = df_all.assign(**{f"n{n}ell{l}mm{abs(m)}": df_all[f"n{n}ell{l}m0"] - df_all[f"n{n}ell{l}dfreq"]})
+                        # df_all = df_all.assign(**{f"n{n}ell{l}mp{abs(m)}": df_all[f"n{n}ell{l}m0"] + df_all[f"n{n}ell{l}dfreq"]})
+                        df_all[f"n{n}ell{l}m{m}"] = df_all[f"n{n}ell{l}m0"] + m*df_all[f"n{n}ell{l}dfreq_rot"]
 
         try:
             df_t = df_all[cols].copy()
@@ -53,10 +54,10 @@ def load_data(param, param_idx=0, rot="uniform"):
         df_t['param_value'] = df_t.param.apply(lambda x: list(eval(x).values())[param_idx])
         df_t.to_feather(f"../minisauruses/{param}_{rot}.feather")
 
-    cols0 = [col for col in df_t.columns.values if "ell0m" in col and 'dfreq' not in col]
-    cols1 = [col for col in df_t.columns.values if "ell1m" in col and 'dfreq' not in col]
-    cols2 = [col for col in df_t.columns.values if "ell2m" in col and 'dfreq' not in col]
-    cols3 = [col for col in df_t.columns.values if "ell3m" in col and 'dfreq' not in col]
+    cols0 = [col for col in df_t.columns.values if "ell0m" in col and 'dfreq_rot' not in col]
+    cols1 = [col for col in df_t.columns.values if "ell1m" in col and 'dfreq_rot' not in col]
+    cols2 = [col for col in df_t.columns.values if "ell2m" in col and 'dfreq_rot' not in col]
+    cols3 = [col for col in df_t.columns.values if "ell3m" in col and 'dfreq_rot' not in col]
     return df_t, cols0, cols1, cols2, cols3, inputs, df_all
 
 

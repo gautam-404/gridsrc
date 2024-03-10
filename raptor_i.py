@@ -47,7 +47,7 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
     ## Add empty mode labels
     ## All other straightforward methods of doing this gave performance warnings and fragmented dataframe
     ## Concat works fine
-    extra_columns = ['omega', 'R_eq', 'R_polar', 'omega_c']
+    extra_columns = ['omega', 'R_eq', 'R_polar', 'omega_c', 'Dnu', 'eps']
     nan_array = np.full((len(h_master), len(mode_labels+dfreq_labels+dfreq_rot_labels+extra_columns)), np.nan)
     new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+dfreq_labels+dfreq_rot_labels+extra_columns)
     h_master = pd.concat([h_master, new_cols_df], axis=1)
@@ -65,6 +65,8 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
                     ts = pd.read_fwf(tar.extractfile(member), skiprows=5)
                     ts.drop(columns=['M_star', 'R_star', 'Im(freq)', 'E_norm'], inplace=True)
                     ts.rename(columns={'Re(freq)': 'freq'}, inplace=True)
+                    h["Dnu"] = model_Dnu(ts)
+                    h["eps"] = epsilon(ts)
                     for i, label in enumerate(mode_labels):
                         n = int(label.split('n')[-1].split('ell')[0])
                         l = int(label.split('ell')[-1].split('m')[0])
@@ -72,16 +74,6 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
                         freq = ts.query(f'n_pg=={n} and l=={l} and m=={m}')['freq'].values
                         if len(freq) > 0:
                             h[label] = np.round(freq[0], 6)
-                            ### If dfreq needs to be calculated
-                            # if l > 0:
-                            #     m_ = 1
-                            #     m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
-                            #     if len(m1freq) == 0:
-                            #         m_ = -1
-                            #         m1freq = ts.query(f'n_pg=={n} and l=={l} and m=={m_}')['freq'].values
-                            #     if len(m1freq) > 0:
-                            #         m1freq = np.round(m1freq[0], 6)
-                            #         h[f'n{n}ell{l}dfreq'] = abs(freq[0] - m1freq)
                             h[f'n{n}ell{l}dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)
