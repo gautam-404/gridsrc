@@ -9,6 +9,8 @@ import shutil
 import time
 import platform
 
+from . import helper
+
 
 def check_if_done(archive_dir, track):
     '''
@@ -27,7 +29,7 @@ def check_if_done(archive_dir, track):
     else:
         return False
 
-def untar_profiles(profile_tar, jobfs=None):
+def untar_profiles(profiles_tar, jobfs=None):
     """
     Untar all the profiles from a tarball into the jobfs directory.
     """
@@ -35,7 +37,7 @@ def untar_profiles(profile_tar, jobfs=None):
     if jobfs is None:
         HOME = os.environ["HOME"]
         # grid_name = profile_tar.split('/')[-3].split('grid_archive_')[-1]
-        grid_name = profile_tar.split('/')[-3].split('grid_')[-1]
+        grid_name = profiles_tar.split('/')[-3].split('grid_')[-1]
         if "macOS" in platform.platform():
             jobfs = os.path.abspath(f"./gridwork_{grid_name}")
         else:
@@ -54,13 +56,12 @@ def untar_profiles(profile_tar, jobfs=None):
     if not os.path.exists(jobfs):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
     
-    profile_dir = os.path.join(jobfs, profile_tar.split('/')[-1].split('.tar.gz')[0])
-    with tarfile.open(profile_tar, 'r:gz') as tar:
+    profiles_dir = os.path.join(jobfs, profiles_tar.split('/')[-1].split('.tar.gz')[0])
+    print(f"Extracting profiles to {profiles_dir}")
+    with tarfile.open(profiles_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
         tar.extractall(path=jobfs, members=members)
-    if len(glob.glob(f"{profile_dir}/*")) == 0:
-        raise RuntimeError("No profiles found in the tarball")
-    return profile_dir
+    return profiles_dir
 
 def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
     '''
@@ -142,7 +143,7 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     except Exception as e:
         print(e)
         print("Failed to copy GYRE log file")
-    freq_files = glob.glob(f"{profiles_dir}/*-freqs.dat")
+    freq_files = glob.glob(f"{profiles_dir}/*-freqs.dat", recursive=True)
     if len(freq_files) > 0:
         with tarfile.open(f"{archive_dir}/gyre/freqs_{suffix}.tar.gz", "w:gz") as tar:
             for f in freq_files:
@@ -172,7 +173,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
             raise RuntimeError("No profiles to run GYRE on")
         else:
             print(f"{len(profiles)} profiles found to run GYRE on\n")
-        profiles_dir = untar_profiles(profile_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
+        profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
             
         os.environ['OMP_NUM_THREADS'] = '1'
         start_time = time.time()
