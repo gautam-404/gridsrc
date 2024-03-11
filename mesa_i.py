@@ -17,11 +17,12 @@ def teff_helper(star, retry):
 
 def check_if_done(name_og, archive_path):
     archive_path = os.path.abspath(archive_path)
-    runlog_present = os.path.exists(archive_path+f"/runlogs/run_{name_og}.log")
-    profiles_archived = os.path.exists(archive_path+f"/profiles/profiles_{name_og}.tar.gz") and os.path.exists(archive_path+f"/profile_indexes/profiles_{name_og}.index")
+    runlog_present = os.path.exists(os.path.join(archive_path, "runlogs", f"run_{name_og}.log"))
+    profiles_archived = os.path.exists(os.path.join(archive_path, "profiles", f"profiles_{name_og}.tar.gz")) and os.path.exists(os.path.join(archive_path, "profile_indexes", f"profiles_{name_og}.index"))
     if profiles_archived:
         try:
-            with tarfile.open(archive_path+f"/profiles/profiles_{name_og}.tar.gz", "r:gz") as tar:
+            # with tarfile.open(archive_path+f"/profiles/profiles_{name_og}.tar.gz", "r:gz") as tar:
+            with tarfile.open(os.path.join(archive_path, "profiles", f"profiles_{name_og}.tar.gz"), "r:gz") as tar:
                 if len(tar.getnames()) > 0:
                     profiles_archived = True
                 else:
@@ -29,8 +30,8 @@ def check_if_done(name_og, archive_path):
         except:
             print("Error reading previously saved profiles tar")
             profiles_archived = False
-    history_present = os.path.exists(archive_path+f"/histories/history_{name_og}.data")
-    failed = os.path.exists(archive_path+f"/failed/run_{name_og}.log")
+    history_present = os.path.exists(os.path.join(archive_path, "histories", f"history_{name_og}.data"))
+    failed = os.path.exists(os.path.join(archive_path, "failed", f"run_{name_og}.log"))
     if runlog_present and profiles_archived and history_present and not failed:
         print(f"Track {name_og} already done. Skipping...")
         return True
@@ -122,8 +123,8 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
     failed = True   ## Flag to check if the run failed
     previously_done = check_if_done(name_og, archive_path)
     if produce_track and not previously_done:
-        if not os.path.exists(f"{archive_path}/inlists/inlists_{name_og}"):
-            os.mkdir(f"{archive_path}/inlists/inlists_{name_og}")
+        if not os.path.exists(os.path.join(archive_path, "inlists", f"inlists_{name_og}")):
+            os.mkdir(os.path.join(archive_path, "inlists", f"inlists_{name_og}"))
         start_time = time.time()
         proj.create(overwrite=True) 
         with open(f"{name}/run.log", "a+") as f:
@@ -153,13 +154,14 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
         failed_phase = None
         while retry<=total_retries and failed:
             if dev:
-                template_path = "./src/templates_dev"
+                template_path = os.path.join('.', 'src', 'templates_dev')
+                # template_path = "./src/templates_dev"
                 # star.load_Extras(f"{template_path}/run_star_extras_Dziembowski2.f")
             else:
-                template_path = "./src/templates"
+                template_path = os.path.join('.', 'src', 'templates')
             inlist_file = f"{template_path}/inlist_template"
-            star.load_HistoryColumns(f"{template_path}/history_columns.list")
-            star.load_ProfileColumns(f"{template_path}/profile_columns.list")
+            star.load_HistoryColumns(os.path.join(template_path, "history_columns.list"))
+            star.load_ProfileColumns(os.path.join(template_path, "profile_columns.list"))
             stopping_conditions = [{"stop_at_phase_PreMS":True}, {"stop_at_phase_ZAMS":True}, {"max_age":50e6}, {"stop_at_phase_TAMS":True}, "ERGB"]
             max_timestep = [1e4, 1e5, 1e5, 2e6, 1E7]    ## For GRID
             profile_interval = [1, 1, 1, 5, 5]
@@ -220,7 +222,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
                     reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"]
-                    shutil.copy(f"{name}/inlist_project", archive_path+f"/inlists/inlists_{name_og}/inlist_{phase_name.replace(' ', '_')}")
+                    shutil.copy(os.path.join(name, "inlist_project"), os.path.join(archive_path, "inlists", f"inlists_{name_og}", f"inlist_{phase_name.replace(' ', '_')}"))
                     if phase_name == reqd_phases[0]:
                         termination_code, age = proj.run(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
                     elif phase_name == reqd_phases[1]:
@@ -267,15 +269,15 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                         break
                     
         end_time = time.time()
-        with open(f"{name}/run.log", "a+") as f:
+        with open(os.path.join(name, 'run.log'), "a+") as f:
             f.write(f"Total time: {end_time-start_time} s\n\n")
         if failed:
-            shutil.copy(f"{name}/run.log", archive_path+f"/failed/run_{name_og}.log")
+            shutil.copy(os.path.join(name, 'run.log'), os.path.join(archive_path, 'failed', f'run_{name_og}.log'))
     else:
         failed = False
 
     if not failed and not previously_done:
-        shutil.copy(f"{name}/run.log", archive_path+f"/runlogs/run_{name_og}.log")
+        shutil.copy(os.path.join(name, 'run.log'), os.path.join(archive_path, 'runlogs', f'run_{name_og}.log'))
         archiving_successful = False
         try:
             print("Archiving LOGS...")
@@ -287,7 +289,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
             print("Archiving failed for track ", name_og)
             print(e)
             archiving_successful = False
-        with open(archive_path+f"/runlogs/run_{name_og}.log", "a+") as f:
+        with open(os.path.join(archive_path, 'runlogs', f'run_{name_og}.log'), "a+") as f:
             if archiving_successful:
                 f.write(f"LOGS archived!\n")
             else:

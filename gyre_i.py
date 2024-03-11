@@ -17,9 +17,9 @@ def check_if_done(archive_dir, track):
     '''
     Check if GYRE has already been run on the given archive.
     '''
-    if os.path.exists(f"{archive_dir}/gyre/freqs_{track}.tar.gz"):
+    if os.path.exists(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz")):
         try:
-            with tarfile.open(f"{archive_dir}/gyre/freqs_{track}.tar.gz", "r:gz") as tar:
+            with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz"), "r:gz") as tar:
                 if len(tar.getnames()) > 0:
                     return True
                 else:
@@ -62,7 +62,7 @@ def untar_profiles(profiles_tar, jobfs=None):
         tar.extractall(path=jobfs, members=members)
     return profiles_dir
 
-def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
+def get_gyre_params(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
     '''
     Compute the GYRE input parameters for a given MESA model.
 
@@ -85,18 +85,18 @@ def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=
     '''
     archive_name = os.path.abspath(archive_name)
     if suffix == None:
-        histfile = f"{archive_name}/histories/history.data"
-        pindexfile = f"{archive_name}/profile_indexes/profiles.index"
+        histfile = os.path.join(archive_name, "histories", "history.data")
+        pindexfile = os.path.join(archive_name, "profile_indexes", "profiles.index")
     else:
-        histfile = f"{archive_name}/histories/history_{suffix}.data"
-        pindexfile = f"{archive_name}/profile_indexes/profiles_{suffix}.index"
+        histfile = os.path.join(archive_name, "histories", f"history_{suffix}.data")
+        pindexfile = os.path.join(archive_name, "profile_indexes", f"profiles_{suffix}.index")
     h = pd.read_csv(histfile, delim_whitespace=True, skiprows=5)
     h["Zfrac"] = 1 - h["average_h1"] - h["average_he4"]
     h["Myr"] = h["star_age"]*1.0E-6
     h["density"] = h["star_mass"]/np.power(10,h["log_R"])**3
     p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
     h = pd.merge(h, p, on='model_number', how='inner')
-    gyre_start_age = 1e6
+    gyre_start_age = 0
     gyre_intake = h.query(f"Myr > {gyre_start_age/1e6}")
     profiles = []
     gyre_input_params = []
@@ -137,14 +137,14 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     Save the GYRE outputs to a tarball in the archive directory.
     '''
     try: 
-        shutil.copy(f"{profiles_dir}/gyre.log", f"{archive_dir}/gyre/gyre_{suffix}.log")
+        shutil.copy(os.path.join(profiles_dir, "gyre.log"), os.path.join(archive_dir, "gyre", f"gyre_{suffix}.log"))
         print("Copied GYRE log file")
     except Exception as e:
         print(e)
         print("Failed to copy GYRE log file")
     freq_files = glob.glob(os.path.join(profiles_dir, "*-freqs.dat"))
     if len(freq_files) > 0:
-        with tarfile.open(f"{archive_dir}/gyre/freqs_{suffix}.tar.gz", "w:gz") as tar:
+        with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "w:gz") as tar:
             for f in freq_files:
                 tar.add(f, arcname=f.split('/')[-1])
     else:
@@ -168,13 +168,13 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
     else:
         zinit = float(track.split('_')[1].split('z')[-1])
 
-        profiles, gyre_input_params = get_gyre_params_archived(archive_dir, suffix=track, zinit=zinit, file_format=file_format, run_on_cool=True)
+        profiles, gyre_input_params = get_gyre_params(archive_dir, suffix=track, zinit=zinit, file_format=file_format, run_on_cool=True)
         if len(profiles) == 0:
             raise RuntimeError("No profiles to run GYRE on")
         else:
             print(f"{len(profiles)} profiles found to run GYRE on\n")
         profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
-        
+
         print("Running GYRE...\n")
         os.environ['OMP_NUM_THREADS'] = '1'
         start_time = time.time()
