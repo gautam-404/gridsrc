@@ -45,7 +45,6 @@ def untar_profiles(profiles_tar, jobfs=None):
             try:
                 jobfs = os.path.join(os.environ["PBS_JOBFS"], f"gridwork_{grid_name}")
             except KeyError:
-                print('KeyError. PBS_JOBFS not found. Using TMPDIR.')
                 jobfs = os.path.join(os.environ["TMPDIR"], f"gridwork_{grid_name}")
             except Exception as e:
                 print(e)
@@ -156,7 +155,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
     Run GYRE on a given archive with MESA profiles.
     '''
     sys.stdout.flush()
-    print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
+    print('\nStart Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
 
     archive_dir = os.path.abspath(archive_dir)
@@ -175,7 +174,8 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
         else:
             print(f"{len(profiles)} profiles found to run GYRE on\n")
         profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
-            
+        
+        print("Running GYRE...\n")
         os.environ['OMP_NUM_THREADS'] = '1'
         start_time = time.time()
         proj = ProjectOps()

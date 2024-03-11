@@ -126,7 +126,7 @@ def get_hist(archive_dir, index):
 
 def setup_and_run(archive_dir, index):
     sys.stdout.flush()
-    print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
+    print('\nStart Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
 
     print(f'Producing minisaurus for track index {index} in archive {archive_dir}\n')
