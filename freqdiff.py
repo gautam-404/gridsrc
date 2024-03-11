@@ -36,23 +36,25 @@ def load_data(param, param_idx=0, rot="uniform"):
                 'n2ell3dfreq_rot', 'n3ell3dfreq_rot', 'n4ell3dfreq_rot', 'n5ell3dfreq_rot',
                     'n6ell3dfreq_rot', 'n7ell3dfreq_rot', 'n8ell3dfreq_rot', 'n9ell3dfreq_rot',
                     'n10ell3dfreq_rot', 'Dnu', 'eps']
+        
         l_max = 3
         for n in range(1, 11):
             for l in range(0, l_max+1):
                 for m in range(-l, l+1):
                     if f"n{n}ell{l}m0" in df_all.columns.values:
-                        # df_all = df_all.assign(**{f"n{n}ell{l}mm{abs(m)}": df_all[f"n{n}ell{l}m0"] - df_all[f"n{n}ell{l}dfreq"]})
-                        # df_all = df_all.assign(**{f"n{n}ell{l}mp{abs(m)}": df_all[f"n{n}ell{l}m0"] + df_all[f"n{n}ell{l}dfreq"]})
-                        df_all[f"n{n}ell{l}m{m}"] = df_all[f"n{n}ell{l}m0"] + m*df_all[f"n{n}ell{l}dfreq_rot"]
+                        # df_all[f"n{n}ell{l}m{m}"] = df_all[f"n{n}ell{l}m0"] + m*df_all[f"n{n}ell{l}dfreq_rot"]
+                        df_all = df_all.assign(**{f"n{n}ell{l}m{m}": df_all[f"n{n}ell{l}m0"] + m*df_all[f"n{n}ell{l}dfreq_rot"]})
 
         try:
             df_t = df_all[cols].copy()
         except KeyError:
-            df_all['run_time'] = 0
+            # df_all['run_time'] = 0
+            df_all = df_all.assign(run_time=np.repeat(0, len(df_all)))
             df_t = df_all[cols].copy()
 
-        df_t['param_value'] = df_t.param.apply(lambda x: list(eval(x).values())[param_idx])
-        df_t.to_feather(f"../minisauruses/{param}_{rot}.feather")
+        # df_t['param_value'] = df_t.param.apply(lambda x: list(eval(x).values())[param_idx])
+        df_t = df_t.assign(param_value=df_t.param.apply(lambda x: list(eval(x).values())[param_idx]))
+        df_t.to_feather(f"../minisauruses/{param}/{param}_{rot}.feather")
 
     cols0 = [col for col in df_t.columns.values if "ell0m" in col and 'dfreq_rot' not in col]
     cols1 = [col for col in df_t.columns.values if "ell1m" in col and 'dfreq_rot' not in col]
