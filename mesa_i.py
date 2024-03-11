@@ -1,4 +1,4 @@
-import os
+import os, sys
 from mesaport import MesaAccess, ProjectOps
 import time
 import shutil
@@ -77,6 +77,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
     overwrite : bool, optional
         Overwrite existing directories, by default False
     """
+    sys.stdout.flush()
     print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
 

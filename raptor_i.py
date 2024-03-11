@@ -1,11 +1,11 @@
 import numpy as np
-import os
+import os, sys
 import pandas as pd
 import numpy as np
 import tarfile
 import argparse
 import time
-
+from rich import print
 
 def fit_radial(ts, degree=0):
     n_min, n_max = 5, 9
@@ -125,6 +125,7 @@ def get_hist(archive_dir, index):
 
 
 def setup_and_run(archive_dir, index):
+    sys.stdout.flush()
     print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
 

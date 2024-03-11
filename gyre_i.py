@@ -1,13 +1,14 @@
 from mesaport import ProjectOps
 import glob
 import tarfile
-import os
+import os, sys
 import argparse
 import pandas as pd
 import numpy as np
 import shutil
 import time
 import platform
+from rich import print
 
 from . import helper
 
@@ -57,7 +58,6 @@ def untar_profiles(profiles_tar, jobfs=None):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
     
     profiles_dir = os.path.join(jobfs, profiles_tar.split('/')[-1].split('.tar.gz')[0])
-    print(f"Extracting profiles to {profiles_dir}")
     with tarfile.open(profiles_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
         tar.extractall(path=jobfs, members=members)
@@ -143,7 +143,7 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     except Exception as e:
         print(e)
         print("Failed to copy GYRE log file")
-    freq_files = glob.glob(f"{profiles_dir}/*-freqs.dat", recursive=True)
+    freq_files = glob.glob(os.path.join(profiles_dir, "*-freqs.dat"))
     if len(freq_files) > 0:
         with tarfile.open(f"{archive_dir}/gyre/freqs_{suffix}.tar.gz", "w:gz") as tar:
             for f in freq_files:
@@ -155,6 +155,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
     '''
     Run GYRE on a given archive with MESA profiles.
     '''
+    sys.stdout.flush()
     print('Start Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
 
