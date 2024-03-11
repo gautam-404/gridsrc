@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as plticker 
+import matplotlib.gridspec as gridspec
 import seaborn as sns
 from scipy.interpolate import interp1d
 import matplotlib as mpl
@@ -371,3 +373,111 @@ def plot_mean_ff(fig, ax, df_master, m, z, v, age, ages, params, param_name='par
                 cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[r], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
         # cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
     return fig, ax, cb
+
+
+def plot_meanff_all(df_master, ages, params, major_base=2, minor_base=0.5, param_name='param', param_str='param', ref=0, use_linestyles=False):
+    row, col, slice_ = 'M', 'V', 'Z'
+    M_sample, V_sample, Z_sample = sorted(df_master[row].unique()), sorted(df_master[col].unique()), sorted(df_master[slice_].unique())
+    rows, cols, slices = len(M_sample), len(V_sample), len(Z_sample)
+
+    fig = plt.figure(figsize=(22, 16))
+
+    if use_linestyles:
+        linestyle_tuple = [(0, (3, 1, 1, 1, 1, 1)), 'solid', '--', '-.', ':']
+        palette = sns.color_palette("colorblind", len(params))
+    else:
+        palette = sns.color_palette("magma_r", len(params))
+        linestyle_tuple = ['solid']*len(params)
+    axes = np.zeros((slices, rows, cols), dtype=object)
+    outer = gridspec.GridSpec(rows, cols, wspace=0.1, hspace=0.1)
+    for i in range(rows):
+        max_values = []
+        min_values = []
+        for j in range(cols):
+            inner = gridspec.GridSpecFromSubplotSpec(slices, 1, subplot_spec=outer[i * cols + j], wspace=0, hspace=0)
+            for k in range(slices):
+                ax = plt.Subplot(fig, inner[k])
+                ax.grid(axis='both', which='both', visible=True, alpha=0.3)
+                ax.set_xlim(ages[0], ages[-1])
+                if k != slices-1:
+                    ax.set_xticklabels([])
+                    ax.xaxis.set_ticks_position('none')
+                    if k == 0:
+                        ax.spines[['bottom']].set_visible(False)
+                    elif k != slices-1:
+                        ax.spines[['top', 'bottom']].set(alpha=0.5)
+                else:
+                    if i != rows-1:
+                        ax.set_xticklabels([])
+                        ax.xaxis.set_ticks_position('none')
+                    ax.tick_params(axis='x', labelsize=16)
+                    ax.spines[['top']].set(alpha=0.5)
+                if j == cols-1:
+                    if k == int(slices/2):
+                        ax.set_ylabel(fr"{row} = {M_sample[i]:.2f} $M_\odot$", fontsize=20)
+                        ax.yaxis.set_label_position("right")
+                    ax.text(0.72, 0.75, f"{slice_} = {Z_sample[k]:.3f}", transform=ax.transAxes, fontsize=20)
+                if k == 0 and i == 0:
+                    ax.set_title(f"{col} = {V_sample[j]} km/s", fontsize=20)
+                if j != 0:
+                    ax.set_yticklabels([])
+                    ax.yaxis.set_ticks_position('none')
+                ax.tick_params(axis='y', labelsize=16)
+                fig.add_subplot(ax)
+                axes[k][i][j] = ax
+                
+                for idx in range(len(params)):
+                    mean_ff = df_master[(df_master[row] == M_sample[i]) & (df_master[col] == V_sample[j]) & (df_master[slice_] == Z_sample[k]) & (df_master['param_value'] == params[idx])].sort_values(by='Myr')['mean_ff'].values
+                    if len(mean_ff) > 0:
+                        ax.plot(ages, 100*np.array(mean_ff), color=palette[idx], linestyle=linestyle_tuple[idx], label=params[idx], lw=2, alpha=0.8)
+                        max_values.append(max(100*np.array(mean_ff)))
+                        min_values.append(min(100*np.array(mean_ff)))
+                
+        for ax in axes[k, i, :].flatten():
+            ax.xaxis.set_major_locator(plticker.MultipleLocator(base=5))
+        for ax in axes[:, i, :].flatten():
+            if len(mean_ff) > 0:
+                min_ = min(min_values)
+                max_ = max(max_values)
+                ax.set_ylim(min_-0.1, max_+0.1)
+            ax.yaxis.set_major_locator(plticker.MultipleLocator(base=major_base))
+            ax.yaxis.set_minor_locator(plticker.MultipleLocator(base=minor_base))
+                    
+    fig.supxlabel(r'$\bf{Age \ (Myr)}$', fontsize=22)
+    fig.supylabel(r'$\bf{\langle{\delta f/f} \rangle} \ \rm{(\%)}$', fontsize=22)
+    fig.suptitle(param_name, fontsize=25)
+    outer.tight_layout(fig, rect=[0.01, 0.01, 1, 1])
+
+    print(params)
+    if use_linestyles:
+        handles, labels = ax.get_legend_handles_labels()
+        unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
+        fig.legend(*zip(*unique), loc='center right', bbox_to_anchor=(1.22, 0.5), title=param_str, prop={'size':20}, title_fontsize=20)
+    else:
+        if isinstance(params[0], float) or isinstance(params[0], int):
+            Z = [[0,0],[0,0]]
+            levels = np.array(sorted(params)+[params[-1]+np.diff(params)[0]])
+            contour = plt.contourf(Z, levels, cmap=mpl.colors.ListedColormap(palette))
+            level_step = np.diff(levels)[0]/2
+            cb = plt.colorbar(contour, ticks=levels+level_step, ax=axes)
+            cb.set_label(rf'{param_str}', fontsize=25)
+            cb.set_ticklabels([f"{level:.3f}" for level in levels], fontsize=16)
+            if isinstance(ref, int):
+                cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+            elif isinstance(ref, list):
+                for r in ref:
+                    cb.ax.hlines(params[r]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+            # cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+        elif isinstance(params[0], str):
+            cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin=0, vmax=1), cmap=mpl.colors.ListedColormap(palette)), 
+                                ax=axes, ticks=np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))
+            cb.set_label(rf'{param_str}', fontsize=25)
+            cb.set_ticklabels(params, fontsize=16)
+            if isinstance(ref, int):
+                cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+            elif isinstance(ref, list):
+                for r in ref:
+                    cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[r], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+            # cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+        return fig, axes, cb
+    return fig, axes, None
