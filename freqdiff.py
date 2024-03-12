@@ -279,23 +279,23 @@ def update_fdf_for_current_age(ax, df_master, age, m, z, v, params, ref, palette
     ax.tick_params(axis='both', which='major', labelsize=20)
 
 
-def interactive_fdf(df_master, m, z, v, ages, params, param_name, param_str, ref, use_linestyles=False, transparent=False, bgcolor='white', xlim=(5, 115), ylim=(-5, 5)):
+def interactive_fdf(df_master, m, z, v, ages, params, param_name, param_str, ref, use_linestyles=False, transparent=False, bgcolor='white', xlim=(5, 115), ylim=(-5, 5), figsize=(14, 7), **widget_kwargs):
     age_min, age_max = min(ages), max(ages)
     d_age = ages[1] - ages[0]
 
     palette, linestyles = configure_plot_style(use_linestyles, params, transparent, bgcolor)
     markers = ['o', '^', 's', 'd']
 
-    def plot_with_age(age):
-        fig, ax = plt.subplots(figsize=(14, 7))
+    def plot_with_age(age, figsize):
+        fig, ax = plt.subplots(figsize=figsize)
         update_fdf_for_current_age(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
         fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
         plt.show()
 
-    age_slider = FloatSlider(value=age_min, min=age_min, max=age_max, step=d_age, description='Age:')
+    age_slider = FloatSlider(value=age_min, min=age_min, max=age_max, step=d_age, description='Age:', **widget_kwargs)
     
     # Use interactive to create a widget for the age slider
-    interactive_plot = interactive(plot_with_age, age=age_slider)
+    interactive_plot = interactive(plot_with_age, age=age_slider, figsize=fixed(figsize))
     return interactive_plot
 
 
