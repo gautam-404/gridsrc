@@ -14,14 +14,9 @@ import os, sys
 # import param_samples
 
 
-def load_data(param, param_idx=0, rot="uniform"):
-    inputs = pd.read_csv(f'../minisauruses/{param}/track_inputs_{param}_{rot}.csv')
-    if os.path.isfile(f"../minisauruses/{param}/{param}_{rot}.feather"):
-        df_t = pd.read_feather(f"../minisauruses/{param}/{param}_{rot}.feather")
-        df_all = df_t
-    else:
-        df_all = pd.read_csv(f'../minisauruses/{param}/minisaurus_{param}_{rot}.csv')
-        cols = ['m', 'z', 'v', 'surf_avg_v_rot', 'omega', 'R_eq', 'R_polar', 'omega_c',
+def load_data(param, param_idx=0, rot="uniform", minisaurus_dir="minisauruses", extra_cols=[]):
+    inputs = pd.read_csv(os.path.join(minisaurus_dir, param, f'track_inputs_{param}_{rot}.csv'))
+    cols = ['m', 'z', 'v', 'surf_avg_v_rot', 'omega', 'R_eq', 'R_polar', 'omega_c',
             'run_time', 'param',
             'density', 'log_Teff', 'tr_num', 'Myr', 'n1ell0m0', 'n2ell0m0', 'n3ell0m0', 'n4ell0m0', 'n5ell0m0',
             'n6ell0m0', 'n7ell0m0', 'n8ell0m0', 'n9ell0m0', 'n10ell0m0', 'n1ell1m0',
@@ -38,7 +33,19 @@ def load_data(param, param_idx=0, rot="uniform"):
                 'n2ell3dfreq_rot', 'n3ell3dfreq_rot', 'n4ell3dfreq_rot', 'n5ell3dfreq_rot',
                     'n6ell3dfreq_rot', 'n7ell3dfreq_rot', 'n8ell3dfreq_rot', 'n9ell3dfreq_rot',
                     'n10ell3dfreq_rot', 'Dnu', 'eps']
-        
+    if len(extra_cols) > 0:
+        cols += extra_cols
+    previously_saved = False
+    if os.path.isfile(os.path.join(minisaurus_dir, param, f'minisaurus_{param}_{rot}.feather')):
+        previously_saved = True
+        df_t = pd.read_feather(os.path.join(minisaurus_dir, param, f'minisaurus_{param}_{rot}.feather'))
+        df_all = df_t
+        for col in cols:
+            if col not in df_t.columns:
+                previously_saved = False
+                break
+    if previously_saved == False:
+        df_all = pd.read_csv(os.path.join(minisaurus_dir, param, f'minisaurus_{param}_{rot}.csv'))
         l_max = 3
         for n in range(1, 11):
             for l in range(0, l_max+1):
@@ -56,7 +63,7 @@ def load_data(param, param_idx=0, rot="uniform"):
 
         # df_t['param_value'] = df_t.param.apply(lambda x: list(eval(x).values())[param_idx])
         df_t = df_t.assign(param_value=df_t.param.apply(lambda x: list(eval(x).values())[param_idx]))
-        df_t.to_feather(f"../minisauruses/{param}/{param}_{rot}.feather")
+        df_t.to_feather(os.path.join(minisaurus_dir, param, f'minisaurus_{param}_{rot}.feather'))
 
     cols0 = [col for col in df_t.columns.values if "ell0m" in col and 'dfreq_rot' not in col]
     cols1 = [col for col in df_t.columns.values if "ell1m" in col and 'dfreq_rot' not in col]
@@ -165,7 +172,7 @@ def add_colorbar(fig, ax, params, param_str, ref, palette):
     return fig, ax, cb
 
 def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
-                                param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white'):
+                                param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white', colorbar=True):
     """
     Plots the frequency differences for given parameters.
     """
@@ -203,7 +210,10 @@ def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
     # ax.text(88, 0.9, r'$\bf{\langle \delta {f/f} \rangle}$'+f'={this_mean:.3f}', size=20, weight='bold', color='black', zorder=3)
 
     lim = max(abs(min_val), abs(max_val))
-    ax.set_ylim(-1.1*lim, 1.1*lim)
+    if lim !=0:
+        ax.set_ylim(-1.1*lim, 1.1*lim)
+    else:
+        ax.set_ylim(-0.1, 0.1)
     ax.set_xlim(5, 115)
 
 
@@ -219,7 +229,10 @@ def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
     unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
     fig.legend(*zip(*unique), loc='upper right', bbox_to_anchor=(0.75, 0.88), title=r'$\ell$', prop={'size':15}, title_fontsize=20, ncol=2)
 
-    fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
+    if colorbar:
+        fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
+    else:
+        cb = None
     return fig, ax, cb
 
 
