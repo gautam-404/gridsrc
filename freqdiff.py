@@ -171,64 +171,85 @@ def add_colorbar(fig, ax, params, param_str, ref, palette):
         cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
     return fig, ax, cb
 
+# def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
+#                                 param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white', colorbar=True):
+#     """
+#     Plots the frequency differences for given parameters.
+#     """
+#     patterns = ['ell0m', 'ell1m', 'ell2m', 'ell3m']
+#     cols = get_filtered_columns(df_master, patterns)
+    
+#     palette, linestyles = configure_plot_style(use_linestyles, params, transparent, bgcolor)
+#     markers = ['o', '^', 's', 'd']
+    
+#     # Configure transparency and background if needed
+#     if transparent:
+#         ax.set_facecolor(bgcolor)
+#         ax.grid(True, color=bgcolor, linestyle='--', linewidth=1, alpha=0.5)
+#         for spine in ax.spines.values():
+#             spine.set_edgecolor(bgcolor)
+
+#     l_max = 3
+#     min_val, max_val = 0, 0
+#     df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
+#     df_ref = df.query(f"param_value=={params[ref]}")
+#     freqs = df_ref[cols]
+#     for i, param in enumerate(params):
+#         df_this = df.query(f"param_value=={param}")
+#         for n in range(1, 11):
+#             for l in range(l_max+1):
+#                 k = l+n
+#                 col = cols[k]
+#                 ax.scatter(freqs[col], 100*df_this[f'{col}_ff'],  marker=markers[l], s=100, color=palette[i], label=l, alpha=0.8)
+#         ff_cols = [f'n{n}ell{l}m0_ff' for n in range(1, 11) for l in range(l_max+1)]
+#         min_val = min(min_val, 100*df[ff_cols].min().min())
+#         max_val = max(max_val, 100*df[ff_cols].max().max())
+#     # df_this = df.query(f"param_value=={0.014}")
+#     # this_mean = 100*np.mean(df_this[ff_cols].values)
+#     # ax.plot(range(4, 116),  np.repeat(this_mean, len(range(4, 116))), lw=2, color='black', zorder=3)
+#     # ax.text(88, 0.9, r'$\bf{\langle \delta {f/f} \rangle}$'+f'={this_mean:.3f}', size=20, weight='bold', color='black', zorder=3)
+
+#     lim = max(abs(min_val), abs(max_val))
+#     if lim !=0:
+#         ax.set_ylim(-1.1*lim, 1.1*lim)
+#     else:
+#         ax.set_ylim(-0.1, 0.1)
+#     ax.set_xlim(5, 115)
+
+
+#     ax.set_title(f'Age: {age:.2f} Myrs', fontsize=25, weight='bold')
+#     ax.set_xlabel(r"$\bf{f, \ \ \rm{d}^{-1}}$", size=25, weight='bold')
+#     ax.set_ylabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
+    
+#     ax.axhline(0, ls='dashed', color='grey')
+#     ax.tick_params(axis='both', which='major', labelsize=20)
+        
+
+#     handles, labels = ax.get_legend_handles_labels()
+#     unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
+#     fig.legend(*zip(*unique), loc='upper right', bbox_to_anchor=(0.75, 0.88), title=r'$\ell$', prop={'size':15}, title_fontsize=20, ncol=2)
+
+#     if colorbar:
+#         fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
+#     else:
+#         cb = None
+#     return fig, ax, cb
+
 def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
-                                param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white', colorbar=True):
+                                param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white', colorbar=True,
+                                xlim=(5, 115), ylim=(-5, 5), swap_axes=False):
     """
     Plots the frequency differences for given parameters.
     """
     patterns = ['ell0m', 'ell1m', 'ell2m', 'ell3m']
     cols = get_filtered_columns(df_master, patterns)
-    
+
     palette, linestyles = configure_plot_style(use_linestyles, params, transparent, bgcolor)
     markers = ['o', '^', 's', 'd']
-    
-    # Configure transparency and background if needed
-    if transparent:
-        ax.set_facecolor(bgcolor)
-        ax.grid(True, color=bgcolor, linestyle='--', linewidth=1, alpha=0.5)
-        for spine in ax.spines.values():
-            spine.set_edgecolor(bgcolor)
-
-    l_max = 3
-    min_val, max_val = 0, 0
-    df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
-    df_ref = df.query(f"param_value=={params[ref]}")
-    freqs = df_ref[cols]
-    for i, param in enumerate(params):
-        df_this = df.query(f"param_value=={param}")
-        for n in range(1, 11):
-            for l in range(l_max+1):
-                k = l+n
-                col = cols[k]
-                ax.scatter(freqs[col], 100*df_this[f'{col}_ff'],  marker=markers[l], s=100, color=palette[i], label=l, alpha=0.8)
-        ff_cols = [f'n{n}ell{l}m0_ff' for n in range(1, 11) for l in range(l_max+1)]
-        min_val = min(min_val, 100*df[ff_cols].min().min())
-        max_val = max(max_val, 100*df[ff_cols].max().max())
-    # df_this = df.query(f"param_value=={0.014}")
-    # this_mean = 100*np.mean(df_this[ff_cols].values)
-    # ax.plot(range(4, 116),  np.repeat(this_mean, len(range(4, 116))), lw=2, color='black', zorder=3)
-    # ax.text(88, 0.9, r'$\bf{\langle \delta {f/f} \rangle}$'+f'={this_mean:.3f}', size=20, weight='bold', color='black', zorder=3)
-
-    lim = max(abs(min_val), abs(max_val))
-    if lim !=0:
-        ax.set_ylim(-1.1*lim, 1.1*lim)
+    if swap_axes:
+        update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
     else:
-        ax.set_ylim(-0.1, 0.1)
-    ax.set_xlim(5, 115)
-
-
-    ax.set_title(f'Age: {age:.2f} Myrs', fontsize=25, weight='bold')
-    ax.set_xlabel(r"$\bf{f, \ \ \rm{d}^{-1}}$", size=25, weight='bold')
-    ax.set_ylabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
-    
-    ax.axhline(0, ls='dashed', color='grey')
-    ax.tick_params(axis='both', which='major', labelsize=20)
-        
-
-    handles, labels = ax.get_legend_handles_labels()
-    unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
-    fig.legend(*zip(*unique), loc='upper right', bbox_to_anchor=(0.75, 0.88), title=r'$\ell$', prop={'size':15}, title_fontsize=20, ncol=2)
-
+        update_fdf_x(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
     if colorbar:
         fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
     else:
@@ -249,7 +270,7 @@ def animate_fdf(fig, ax, df_master, m, z, v, ages, params,
     fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
 
     def update(age):
-        return update_fdf_for_current_age(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
+        return update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
     
     d_age = ages[1] - ages[0] 
     ages = np.arange(ages[0], ages[-1]+d_age, d_age*skipstep)
@@ -257,7 +278,7 @@ def animate_fdf(fig, ax, df_master, m, z, v, ages, params,
     return ani
 
 
-def update_fdf_for_current_age(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim):
+def update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim):
     """
     Updates the plot for a specific age.
     """
@@ -290,6 +311,77 @@ def update_fdf_for_current_age(ax, df_master, age, m, z, v, params, ref, palette
     ax.set_ylabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
     ax.axhline(0, ls='dashed', color='grey')
     ax.tick_params(axis='both', which='major', labelsize=20)
+    return ax
+
+def update_fdf_x(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim):
+    """
+    Updates the plot for a specific age.
+    """
+    ax.clear()
+    age = np.round(age, decimals=4)  # Ensure age is rounded for comparison
+    df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
+    df_ref = df.query(f"param_value=={params[ref]}")
+    cols = get_filtered_columns(df_master, ['ell0m', 'ell1m', 'ell2m', 'ell3m'])
+
+    l_max = 3
+    df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
+    df_ref = df.query(f"param_value=={params[ref]}")
+    freqs = df_ref[cols]
+    for i, param in enumerate(params):
+        df_this = df.query(f"param_value=={param}")
+        for n in range(1, 11):
+            for l in range(l_max+1):
+                k = l+n
+                col = cols[k]
+                ax.scatter(100*df_this[f'{col}_ff'], freqs[col],  marker=markers[l], s=100, color=palette[i], label=l, alpha=0.8)
+
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
+    ax.legend(*zip(*unique), loc='upper right', title=r'$\ell$', prop={'size':15}, title_fontsize=20, ncol=2)
+
+    ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    ax.set_title(f'Age: {age} Myrs', fontsize=25, weight='bold')
+    ax.set_ylabel(r"$\bf{f, \ \ \rm{d}^{-1}}$", size=25, weight='bold')
+    ax.set_xlabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
+    ax.axvline(0, ls='dashed', color='grey')
+    ax.tick_params(axis='both', which='major', labelsize=20)
+    return ax
+
+def update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim):
+    """
+    Updates the plot for a specific age.
+    """
+    ax.clear()
+    age = np.round(age, decimals=4)  # Ensure age is rounded for comparison
+    df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
+    df_ref = df.query(f"param_value=={params[ref]}")
+    cols = get_filtered_columns(df_master, ['ell0m', 'ell1m', 'ell2m', 'ell3m'])
+
+    l_max = 3
+    df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
+    df_ref = df.query(f"param_value=={params[ref]}")
+    freqs = df_ref[cols]
+    for i, param in enumerate(params):
+        df_this = df.query(f"param_value=={param}")
+        for n in range(1, 11):
+            for l in range(l_max+1):
+                k = l+n
+                col = cols[k]
+                ax.scatter(freqs[col], 100*df_this[f'{col}_ff'],  marker=markers[l], s=100, color=palette[i], label=l, alpha=0.8)
+
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
+    ax.legend(*zip(*unique), loc='upper right', title=r'$\ell$', prop={'size':15}, title_fontsize=20, ncol=2)
+
+    ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    ax.set_title(f'Age: {age} Myrs', fontsize=25, weight='bold')
+    ax.set_xlabel(r"$\bf{f, \ \ \rm{d}^{-1}}$", size=25, weight='bold')
+    ax.set_ylabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
+    ax.axhline(0, ls='dashed', color='grey')
+    ax.tick_params(axis='both', which='major', labelsize=20)
+    return ax
 
 
 def interactive_fdf(df_master, m, z, v, ages, params, param_name, param_str, ref, use_linestyles=False, transparent=False, bgcolor='white', xlim=(5, 115), ylim=(-5, 5), figsize=(14, 7), **widget_kwargs):
@@ -301,7 +393,7 @@ def interactive_fdf(df_master, m, z, v, ages, params, param_name, param_str, ref
 
     def plot_with_age(age, figsize):
         fig, ax = plt.subplots(figsize=figsize)
-        update_fdf_for_current_age(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
+        update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
         fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
         plt.show()
 
