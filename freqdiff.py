@@ -636,7 +636,7 @@ def update(age, axes, m, z, v, interactive=False, fig=None, colors=sns.color_pal
         display.display(fig)
     return axes
 
-def comp_plots(fig, df_master, ages, m, z, v, params, ref, subplot_params=[], subplot_labels=[], interactive=True, ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
+def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref, subplot_params=[], subplot_labels=[], interactive=True, ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
     """
     Function to compare the fractional differences for different parameters. Subplots can be added to see the evolution of other history columns.
 
