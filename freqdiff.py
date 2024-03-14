@@ -590,11 +590,13 @@ def plot_meanff_all(df_master, ages, params, major_base=2, minor_base=0.5, param
 
 
 #### New functions for plotting fdf
-def update(age, axes, m, z, v, interactive=False, fig=None, colors=sns.color_palette("magma_r", len(params)), subplot_params=['pp', 'cno'], 
+def update(age, axes, df_master, ages, m, z, v, params, param_name, param_str, ref, interactive=False, fig=None, colors=None, subplot_params=['pp', 'cno'], 
            subplot_labels=[r"L$_{pp}$ (L$_{\odot}$)", r"L$_{CNO}$ (L$_{\odot}$)'])"], ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
     """
     Function to update the fractional differences plot for a given age. 
     """
+    if colors is None:
+        sns.color_palette("magma_r", len(params))
     [ax.cla() for ax in axes.flatten()]
     markers = ['o', '^', 's', 'd']
     ylims_max = []
@@ -687,11 +689,11 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
         from ipywidgets import interactive, fixed
         from ipywidgets import FloatSlider
         return interactive(update, age=FloatSlider(value=ages[age_start_idx], min=ages[age_start_idx], max=ages.max(), step=0.1, description='Age:', layout={'width': '1000px'}), 
-                    axes=fixed(axes), interactive=fixed(True), fig=fixed(fig), colors=fixed(colors), subplot_params=fixed(subplot_params), subplot_labels=fixed(subplot_labels), 
-                    m=fixed(m), z=fixed(z), v=fixed(v), ylim_fdf=fixed(ylim_fdf), xlim_fdf=fixed(xlim_fdf))
+                    df_master=fixed(df_master), ages=fixed(ages), axes=fixed(axes), interactive=fixed(True), fig=fixed(fig), colors=fixed(colors), params=fixed(params), param_name=fixed(param_name),
+                    param_str=fixed(param_str), ref=fixed(ref), subplot_params=fixed(subplot_params), subplot_labels=fixed(subplot_labels), m=fixed(m), z=fixed(z), v=fixed(v), ylim_fdf=fixed(ylim_fdf), xlim_fdf=fixed(xlim_fdf))
     else:
         from matplotlib.animation import FuncAnimation
-        ani = FuncAnimation(fig, update, frames=ages[age_start_idx::10], fargs=[axes, m, z, v, False, fig, colors, subplot_params, subplot_labels, ylim_fdf, xlim_fdf], repeat=False)
+        ani = FuncAnimation(fig, update, frames=ages[age_start_idx::10], fargs=[axes, df_master, ages, m, z, v, params, param_name, param_str, ref, interactive, fig, colors, subplot_params, subplot_labels, ylim_fdf, xlim_fdf], repeat=False)
         ani.save(f'../figures/{param_name}_fdf_m{m}_z{z}_v{v}_{subplot_params}.gif', writer='ffmpeg', fps=10)
         return ani
     
