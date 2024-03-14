@@ -586,3 +586,112 @@ def plot_meanff_all(df_master, ages, params, major_base=2, minor_base=0.5, param
             # cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
         return fig, axes, cb
     return fig, axes, None
+
+
+
+#### New functions for plotting fdf
+def update(age, axes, m, z, v, interactive=False, fig=None, colors=sns.color_palette("magma_r", len(params)), subplot_params=['pp', 'cno'], 
+           subplot_labels=[r"L$_{pp}$ (L$_{\odot}$)", r"L$_{CNO}$ (L$_{\odot}$)'])"], ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
+    """
+    Function to update the fractional differences plot for a given age. 
+    """
+    [ax.cla() for ax in axes.flatten()]
+    markers = ['o', '^', 's', 'd']
+    ylims_max = []
+    ylims_min = []
+    for i, subplot_param in enumerate(subplot_params):
+        if 'log' in subplot_param or 'cno' in subplot_param or 'pp' in subplot_param:
+            ylims_max.append([10**df_master.query(f"M=={m_i} and Z=={z_i} and V=={v_i}")[subplot_param].max() for m_i, z_i, v_i in zip(m, z, v)])
+            ylims_min.append([10**df_master.query(f"M=={m_i} and Z=={z_i} and V=={v_i}")[subplot_param].min() for m_i, z_i, v_i in zip(m, z, v)])
+        else:
+            ylims_max.append([df_master.query(f"M=={m_i} and Z=={z_i} and V=={v_i}")[subplot_param].max() for m_i, z_i, v_i in zip(m, z, v)])
+            ylims_min.append([df_master.query(f"M=={m_i} and Z=={z_i} and V=={v_i}")[subplot_param].min() for m_i, z_i, v_i in zip(m, z, v)])
+    for i, ((m, z, v), axes_i) in enumerate(zip(zip(m, z, v), axes)):
+        axes_i[0] = update_fdf_x(axes_i[0], df_master, age, m, z, v, params, ref, colors, markers, ylim=ylim_fdf, xlim=xlim_fdf)
+        if len(subplot_params) > 0:
+            for param_value in params:
+                for j, subplot_param in enumerate(subplot_params):
+                    ax = axes_i[j+1]
+                    if 'log' in subplot_param or 'cno' in subplot_param or 'pp' in subplot_param:
+                        ax.plot(ages, 10**df_master.query(f"M=={m} and Z=={z} and V=={v} and param_value=={param_value}")[subplot_param], label=f"{param_str} = {param_value}", color=colors[params.index(param_value)])
+                    else:
+                        ax.plot(ages, df_master.query(f"M=={m} and Z=={z} and V=={v} and param_value=={param_value}")[subplot_param], label=f"{param_str} = {param_value}", color=colors[params.index(param_value)])
+            for j, subplot_param in enumerate(subplot_params):
+                ax = axes_i[j+1]
+                ax.vlines(age, -1, 100, linestyle="--", color="k")
+                ax.set_ylabel(subplot_labels[j], fontsize=20, weight="bold")
+                ax.tick_params(axis='both', which='major', labelsize=20)
+                ax.set_xlim(5, 40)
+                ax.set_ylim(ylims_min[j][i]*0.9, ylims_max[j][i]*1.1)
+                if j < len(subplot_params)-1:
+                    ax.set_xticklabels([])
+        if i > 0:
+            for ax in axes_i:
+                ax.set_yticklabels([])
+                ax.set_ylabel("")
+        axes_i[0].set_title(f'M={m}, '+r'Z$_{in}$='+f'{z}, '+r'V$_{in}$='+f'{v}', fontsize=20, weight="bold")
+        [ax.grid(alpha=0.3) for ax in axes_i]
+    fig._suptitle.set_text(f'Age = {age} Myr')
+    if interactive:
+        display.display(fig)
+    return axes
+
+def comp_plots(fig, df_master, ages, m, z, v, params, ref, subplot_params=[], subplot_labels=[], interactive=True, ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
+    """
+    Function to compare the fractional differences for different parameters. Subplots can be added to see the evolution of other history columns.
+
+    Arguments
+    ----------
+    fig : matplotlib.figure.Figure
+        Figure object to plot the fractional differences.
+    df_master : pandas.DataFrame
+        DataFrame containing the fractional differences for all the parameters.
+    ages : numpy.ndarray
+        Array containing the ages at which the fractional differences are calculated.
+    m : list
+        List of masses for which the fractional differences are calculated. 
+        Note: Length of the list should be the same as the length of z and v.
+    z : list
+        List of metallicities for which the fractional differences are calculated. 
+        Note: Length of the list should be the same as the length of m and v.
+    v : list
+        List of overshoot values for which the fractional differences are calculated. 
+        Note: Length of the list should be the same as the length of m and z.
+    params : list
+        List of parameter values for which the fractional differences are calculated.
+    ref : int
+        Index of the reference model.
+    subplot_params : list, optional
+        List of history columns to be plotted in the subplots. Default is an empty list.
+    subplot_labels : list, optional
+        List of labels for the subplots. Default is an empty list.
+    interactive : bool, optional
+        If True, the plot is interactive. Default is True.
+    """
+    outer = gridspec.GridSpec(nrows=1, ncols=len(m), width_ratios=[0.8 if i != len(m)-1 else 1 for i in range(len(m))], wspace=0.05)
+    if len(subplot_params) > 0:
+        cols = [gridspec.GridSpecFromSubplotSpec(nrows=2, ncols=1, subplot_spec=outer[i], hspace=0.3) for i in range(len(m))]
+        upper = [gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=cols[i][0], hspace=0.05) for i in range(len(m))]
+        lower = [gridspec.GridSpecFromSubplotSpec(nrows=len(subplot_params), ncols=1, subplot_spec=cols[i][1], hspace=0.05) for i in range(len(m))]
+        axes = np.array([[fig.add_subplot(upper[i][0])] + [fig.add_subplot(lower[i][j]) for j in range(len(subplot_params))] for i in range(len(m))])
+    else:
+        axes = np.array([[fig.add_subplot(outer[i])] for i in range(len(m))])
+    plt.close()
+    age_start_idx = 40
+    title = fig.suptitle(f'Age = {ages[age_start_idx]} Myr', fontsize=20, weight="bold", x=0.47, y=0.95)
+    fig.align_ylabels()
+    colors = sns.color_palette("magma_r", len(params))
+    cb = add_colorbar(fig=fig, ax=axes[len(m)-1], params=params, param_str=param_str, palette=colors, ref=ref)
+
+    if interactive:
+        from ipywidgets import interactive, fixed
+        from ipywidgets import FloatSlider
+        return interactive(update, age=FloatSlider(value=ages[age_start_idx], min=ages[age_start_idx], max=ages.max(), step=0.1, description='Age:', layout={'width': '1000px'}), 
+                    axes=fixed(axes), interactive=fixed(True), fig=fixed(fig), colors=fixed(colors), subplot_params=fixed(subplot_params), subplot_labels=fixed(subplot_labels), 
+                    m=fixed(m), z=fixed(z), v=fixed(v), ylim_fdf=fixed(ylim_fdf), xlim_fdf=fixed(xlim_fdf))
+    else:
+        from matplotlib.animation import FuncAnimation
+        ani = FuncAnimation(fig, update, frames=ages[age_start_idx::10], fargs=[axes, m, z, v, False, fig, colors, subplot_params, subplot_labels, ylim_fdf, xlim_fdf], repeat=False)
+        ani.save(f'../figures/{param_name}_fdf_m{m}_z{z}_v{v}_{subplot_params}.gif', writer='ffmpeg', fps=10)
+        return ani
+    
