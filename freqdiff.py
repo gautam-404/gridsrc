@@ -638,7 +638,7 @@ def update(age, axes, df_master, ages, m, z, v, params, param_name, param_str, r
         display.display(fig)
     return axes
 
-def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref, subplot_params=[], subplot_labels=[], interactive=True, ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
+def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref, age_start_idx=40, subplot_params=[], subplot_labels=[], interactive=True, ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
     """
     Function to compare the fractional differences for different parameters. Subplots can be added to see the evolution of other history columns.
 
@@ -679,7 +679,6 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
     else:
         axes = np.array([[fig.add_subplot(outer[i])] for i in range(len(m))])
     # plt.close()
-    age_start_idx = 40
     title = fig.suptitle(f'Age = {ages[age_start_idx]:.2f} Myr', fontsize=20, weight="bold", x=0.47, y=0.95)
     fig.align_ylabels()
     colors = sns.color_palette("magma_r", len(params))
