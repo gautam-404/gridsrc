@@ -633,7 +633,7 @@ def update(age, axes, df_master, ages, m, z, v, params, param_name, param_str, r
                 ax.set_ylabel("")
         axes_i[0].set_title(f'M={m}, '+r'Z$_{in}$='+f'{z}, '+r'V$_{in}$='+f'{v}', fontsize=20, weight="bold")
         [ax.grid(alpha=0.3) for ax in axes_i]
-    fig._suptitle.set_text(f'Age = {age} Myr')
+    fig._suptitle.set_text(f'Age = {age:.2f} Myr')
     if interactive:
         display.display(fig)
     return axes
@@ -670,7 +670,7 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
     interactive : bool, optional
         If True, the plot is interactive. Default is True.
     """
-    outer = gridspec.GridSpec(nrows=1, ncols=len(m), width_ratios=[0.8 if i != len(m)-1 else 1 for i in range(len(m))], wspace=0.05)
+    outer = gridspec.GridSpec(nrows=1, ncols=len(m), width_ratios=[0.8 if i != len(m)-1 else 1 for i in range(len(m))], wspace=0.05, figure=fig)
     if len(subplot_params) > 0:
         cols = [gridspec.GridSpecFromSubplotSpec(nrows=2, ncols=1, subplot_spec=outer[i], hspace=0.3) for i in range(len(m))]
         upper = [gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=cols[i][0], hspace=0.05) for i in range(len(m))]
@@ -678,9 +678,9 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
         axes = np.array([[fig.add_subplot(upper[i][0])] + [fig.add_subplot(lower[i][j]) for j in range(len(subplot_params))] for i in range(len(m))])
     else:
         axes = np.array([[fig.add_subplot(outer[i])] for i in range(len(m))])
-    plt.close()
+    # plt.close()
     age_start_idx = 40
-    title = fig.suptitle(f'Age = {ages[age_start_idx]} Myr', fontsize=20, weight="bold", x=0.47, y=0.95)
+    title = fig.suptitle(f'Age = {ages[age_start_idx]:.2f} Myr', fontsize=20, weight="bold", x=0.47, y=0.95)
     fig.align_ylabels()
     colors = sns.color_palette("magma_r", len(params))
     cb = add_colorbar(fig=fig, ax=axes[len(m)-1], params=params, param_str=param_str, palette=colors, ref=ref)
