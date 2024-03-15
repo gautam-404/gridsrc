@@ -482,7 +482,7 @@ def plot_meanff_all(df_master, ages, params, y_major_base=2, y_minor_base=None, 
 
 
 #### New functions for plotting fdf
-def update(age, axes, df_master, ages, m, z, v, params, param_name, param_str, ref, interactive=False, fig=None, colors=None, subplot_params=['pp', 'cno'], 
+def update_comp_plots(age, axes, df_master, ages, m, z, v, params, param_name, param_str, ref, interactive=False, fig=None, colors=None, subplot_params=['pp', 'cno'], 
            subplot_labels=[r"L$_{pp}$ (L$_{\odot}$)", r"L$_{CNO}$ (L$_{\odot}$)'])"], ylim_fdf=(10, 100), xlim_fdf=(-3, 3)):
     """
     Function to update the fractional differences plot for a given age. 
@@ -579,12 +579,12 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
     if interactive:
         from ipywidgets import interactive, fixed
         from ipywidgets import FloatSlider
-        return interactive(update, age=FloatSlider(value=ages[age_start_idx], min=ages[age_start_idx], max=ages.max(), step=0.1, description='Age:', layout={'width': '1000px'}), 
+        return interactive(update_comp_plots, age=FloatSlider(value=ages[age_start_idx], min=ages[age_start_idx], max=ages.max(), step=0.1, description='Age:', layout={'width': '1000px'}), 
                     df_master=fixed(df_master), ages=fixed(ages), axes=fixed(axes), interactive=fixed(True), fig=fixed(fig), colors=fixed(colors), params=fixed(params), param_name=fixed(param_name),
                     param_str=fixed(param_str), ref=fixed(ref), subplot_params=fixed(subplot_params), subplot_labels=fixed(subplot_labels), m=fixed(m), z=fixed(z), v=fixed(v), ylim_fdf=fixed(ylim_fdf), xlim_fdf=fixed(xlim_fdf))
     else:
         from matplotlib.animation import FuncAnimation
-        ani = FuncAnimation(fig, update, frames=ages[age_start_idx::10], fargs=[axes, df_master, ages, m, z, v, params, param_name, param_str, ref, interactive, fig, colors, subplot_params, subplot_labels, ylim_fdf, xlim_fdf], repeat=False)
+        ani = FuncAnimation(fig, update_comp_plots, frames=ages[age_start_idx::10], fargs=[axes, df_master, ages, m, z, v, params, param_name, param_str, ref, interactive, fig, colors, subplot_params, subplot_labels, ylim_fdf, xlim_fdf], repeat=False)
         ani.save(f'../figures/{param_name}_fdf_m{m}_z{z}_v{v}_{subplot_params}.gif', writer='ffmpeg', fps=10)
         return ani
     
