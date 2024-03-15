@@ -143,97 +143,44 @@ def configure_plot_style(use_linestyles, params, transparent, bgcolor):
     
     return palette, linestyles
 
-def add_colorbar(fig, ax, params, param_str, ref, palette):
-    if isinstance(params[0], float) or isinstance(params[0], int):
-        Z = [[0,0],[0,0]]
-        levels = np.array(sorted(params)+[params[-1]+np.diff(params)[0]])
-        contour = plt.contourf(Z, levels, cmap=mpl.colors.ListedColormap(palette))
-        level_step = np.diff(levels)[0]/2
-        cb = fig.colorbar(contour, ticks=levels+level_step, ax=ax)
-        cb.set_label(rf'{param_str}', fontsize=22, weight='bold')
-        cb.set_ticklabels([f"{level:.3f}" for level in levels], fontsize=16)
-        if isinstance(ref, int):
+def add_colorbar(fig, axes, params, param_str, ref, palette, use_linestyles=False):
+    if use_linestyles:
+        if isinstance(axes) == np.ndarray:
+            handles, labels = axes.flatten()[0].get_legend_handles_labels()
+        elif isinstance(axes, list):
+            handles, labels = axes[0].get_legend_handles_labels()
+        else:
+            handles, labels = axes.get_legend_handles_labels()
+        unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
+        fig.legend(*zip(*unique), loc='center right', bbox_to_anchor=(1.22, 0.5), title=param_str, prop={'size':20}, title_fontsize=20)
+        return fig, axes, None
+    else:
+        if isinstance(params[0], float) or isinstance(params[0], int):
+            Z = [[0,0],[0,0]]
+            levels = np.array(sorted(params)+[params[-1]+np.diff(params)[0]])
+            contour = plt.contourf(Z, levels, cmap=mpl.colors.ListedColormap(palette))
+            level_step = np.diff(levels)[0]/2
+            cb = plt.colorbar(contour, ticks=levels+level_step, ax=axes)
+            cb.set_label(rf'{param_str}', fontsize=25)
+            cb.set_ticklabels([f"{level:.3f}" for level in levels], fontsize=16)
+            if isinstance(ref, int):
+                cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+            elif isinstance(ref, list):
+                for r in ref:
+                    cb.ax.hlines(params[r]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
             cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        elif isinstance(ref, list):
-            for r in ref:
-                cb.ax.hlines(params[r]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        # cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-    elif isinstance(params[0], str):
-        cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin=0, vmax=1), cmap=mpl.colors.ListedColormap(palette)), 
-                            ax=ax, ticks=np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))
-        cb.set_label(rf'{param_str}', fontsize=22, weight='bold')
-        cb.set_ticklabels(params, fontsize=16)
-        if isinstance(ref, int):
+        elif isinstance(params[0], str):
+            cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin=0, vmax=1), cmap=mpl.colors.ListedColormap(palette)), 
+                                ax=axes, ticks=np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))
+            cb.set_label(rf'{param_str}', fontsize=25)
+            cb.set_ticklabels(params, fontsize=16)
+            if isinstance(ref, int):
+                cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+            elif isinstance(ref, list):
+                for r in ref:
+                    cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[r], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
             cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        elif isinstance(ref, list):
-            for r in ref:
-                cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[r], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-    return fig, ax, cb
-
-# def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
-#                                 param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white', colorbar=True):
-#     """
-#     Plots the frequency differences for given parameters.
-#     """
-#     patterns = ['ell0m', 'ell1m', 'ell2m', 'ell3m']
-#     cols = get_filtered_columns(df_master, patterns)
-    
-#     palette, linestyles = configure_plot_style(use_linestyles, params, transparent, bgcolor)
-#     markers = ['o', '^', 's', 'd']
-    
-#     # Configure transparency and background if needed
-#     if transparent:
-#         ax.set_facecolor(bgcolor)
-#         ax.grid(True, color=bgcolor, linestyle='--', linewidth=1, alpha=0.5)
-#         for spine in ax.spines.values():
-#             spine.set_edgecolor(bgcolor)
-
-#     l_max = 3
-#     min_val, max_val = 0, 0
-#     df = df_master.query(f"M=={m} and V=={v} and Z=={z} and Myr=={age}")
-#     df_ref = df.query(f"param_value=={params[ref]}")
-#     freqs = df_ref[cols]
-#     for i, param in enumerate(params):
-#         df_this = df.query(f"param_value=={param}")
-#         for n in range(1, 11):
-#             for l in range(l_max+1):
-#                 k = l+n
-#                 col = cols[k]
-#                 ax.scatter(freqs[col], 100*df_this[f'{col}_ff'],  marker=markers[l], s=100, color=palette[i], label=l, alpha=0.8)
-#         ff_cols = [f'n{n}ell{l}m0_ff' for n in range(1, 11) for l in range(l_max+1)]
-#         min_val = min(min_val, 100*df[ff_cols].min().min())
-#         max_val = max(max_val, 100*df[ff_cols].max().max())
-#     # df_this = df.query(f"param_value=={0.014}")
-#     # this_mean = 100*np.mean(df_this[ff_cols].values)
-#     # ax.plot(range(4, 116),  np.repeat(this_mean, len(range(4, 116))), lw=2, color='black', zorder=3)
-#     # ax.text(88, 0.9, r'$\bf{\langle \delta {f/f} \rangle}$'+f'={this_mean:.3f}', size=20, weight='bold', color='black', zorder=3)
-
-#     lim = max(abs(min_val), abs(max_val))
-#     if lim !=0:
-#         ax.set_ylim(-1.1*lim, 1.1*lim)
-#     else:
-#         ax.set_ylim(-0.1, 0.1)
-#     ax.set_xlim(5, 115)
-
-
-#     ax.set_title(f'Age: {age:.2f} Myrs', fontsize=25, weight='bold')
-#     ax.set_xlabel(r"$\bf{f, \ \ \rm{d}^{-1}}$", size=25, weight='bold')
-#     ax.set_ylabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
-    
-#     ax.axhline(0, ls='dashed', color='grey')
-#     ax.tick_params(axis='both', which='major', labelsize=20)
-        
-
-#     handles, labels = ax.get_legend_handles_labels()
-#     unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
-#     fig.legend(*zip(*unique), loc='upper right', bbox_to_anchor=(0.75, 0.88), title=r'$\ell$', prop={'size':15}, title_fontsize=20, ncol=2)
-
-#     if colorbar:
-#         fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
-#     else:
-#         cb = None
-#     return fig, ax, cb
+        return fig, axes, cb
 
 def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
                                 param_str='param', ref=0, use_linestyles=False, transparent=False, bgcolor='white', colorbar=True,
@@ -452,35 +399,11 @@ def plot_mean_ff(fig, ax, df_master, m, z, v, age, ages, params, param_name='par
     ax.set_ylabel(r'$\bf{\delta f/f}$ (%)', size=25, weight='bold')
     ax.tick_params(axis='both', which='major', labelsize=20)
 
-    if isinstance(params[0], float) or isinstance(params[0], int):
-        Z = [[0,0],[0,0]]
-        levels = np.array(sorted(params)+[params[-1]+np.diff(params)[0]])
-        contour = plt.contourf(Z, levels, cmap=mpl.colors.ListedColormap(palette))
-        level_step = np.diff(levels)[0]/2
-        cb = fig.colorbar(contour, ticks=levels+level_step, ax=ax)
-        cb.set_label(rf'{param_str}', fontsize=22, weight='bold')
-        cb.set_ticklabels([f"{level:.3f}" for level in levels], fontsize=16)
-        if isinstance(ref, int):
-            cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        elif isinstance(ref, list):
-            for r in ref:
-                cb.ax.hlines(params[r]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        # cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-    elif isinstance(params[0], str):
-        cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin=0, vmax=1), cmap=mpl.colors.ListedColormap(palette)), 
-                            ax=ax, ticks=np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))
-        cb.set_label(rf'{param_str}', fontsize=22, weight='bold')
-        cb.set_ticklabels(params, fontsize=16)
-        if isinstance(ref, int):
-            cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        elif isinstance(ref, list):
-            for r in ref:
-                cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[r], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        # cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
+    fig, ax, cb = add_colorbar(fig=fig, axes=ax, params=params, param_str=param_str, ref=ref, palette=palette, use_linestyles=use_linestyles)
     return fig, ax, cb
 
 
-def plot_meanff_all(df_master, ages, params, major_base=2, minor_base=0.5, param_name='param', param_str='param', ref=0, use_linestyles=False):
+def plot_meanff_all(df_master, ages, params, y_major_base=2, y_minor_base=None, x_major_base=5, x_minor_base=None, param_name='param', param_str='param', ref=0, use_linestyles=False):
     row, col, slice_ = 'M', 'V', 'Z'
     M_sample, V_sample, Z_sample = sorted(df_master[row].unique()), sorted(df_master[col].unique()), sorted(df_master[slice_].unique())
     rows, cols, slices = len(M_sample), len(V_sample), len(Z_sample)
@@ -537,56 +460,25 @@ def plot_meanff_all(df_master, ages, params, major_base=2, minor_base=0.5, param
                         ax.plot(ages, 100*np.array(mean_ff), color=palette[idx], linestyle=linestyle_tuple[idx], label=params[idx], lw=2, alpha=0.8)
                         max_values.append(max(100*np.array(mean_ff)))
                         min_values.append(min(100*np.array(mean_ff)))
-                
-        for ax in axes[k, i, :].flatten():
-            ax.xaxis.set_major_locator(plticker.MultipleLocator(base=5))
+
         for ax in axes[:, i, :].flatten():
             if len(mean_ff) > 0:
                 min_ = min(min_values)
                 max_ = max(max_values)
                 ax.set_ylim(min_-0.1, max_+0.1)
-            ax.yaxis.set_major_locator(plticker.MultipleLocator(base=major_base))
-            ax.yaxis.set_minor_locator(plticker.MultipleLocator(base=minor_base))
-                    
+            ax.yaxis.set_major_locator(plticker.MultipleLocator(base=y_major_base))
+            if y_minor_base is not None:
+                ax.yaxis.set_minor_locator(plticker.MultipleLocator(base=y_minor_base))
+            ax.xaxis.set_major_locator(plticker.MultipleLocator(base=x_major_base))
+            if x_minor_base is not None:
+                ax.xaxis.set_minor_locator(plticker.MultipleLocator(base=x_minor_base))             
     fig.supxlabel(r'$\bf{Age \ (Myr)}$', fontsize=22)
     fig.supylabel(r'$\bf{\langle{\delta f/f} \rangle} \ \rm{(\%)}$', fontsize=22)
     fig.suptitle(param_name, fontsize=25)
     outer.tight_layout(fig, rect=[0.01, 0.01, 1, 1])
 
-    print(params)
-    if use_linestyles:
-        handles, labels = ax.get_legend_handles_labels()
-        unique = [(handle, label) for i, (handle, label) in enumerate(zip(handles, labels)) if label not in labels[:i]]
-        fig.legend(*zip(*unique), loc='center right', bbox_to_anchor=(1.22, 0.5), title=param_str, prop={'size':20}, title_fontsize=20)
-    else:
-        if isinstance(params[0], float) or isinstance(params[0], int):
-            Z = [[0,0],[0,0]]
-            levels = np.array(sorted(params)+[params[-1]+np.diff(params)[0]])
-            contour = plt.contourf(Z, levels, cmap=mpl.colors.ListedColormap(palette))
-            level_step = np.diff(levels)[0]/2
-            cb = plt.colorbar(contour, ticks=levels+level_step, ax=axes)
-            cb.set_label(rf'{param_str}', fontsize=25)
-            cb.set_ticklabels([f"{level:.3f}" for level in levels], fontsize=16)
-            if isinstance(ref, int):
-                cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-            elif isinstance(ref, list):
-                for r in ref:
-                    cb.ax.hlines(params[r]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-            # cb.ax.hlines(params[ref]+level_step, 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        elif isinstance(params[0], str):
-            cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin=0, vmax=1), cmap=mpl.colors.ListedColormap(palette)), 
-                                ax=axes, ticks=np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))
-            cb.set_label(rf'{param_str}', fontsize=25)
-            cb.set_ticklabels(params, fontsize=16)
-            if isinstance(ref, int):
-                cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-            elif isinstance(ref, list):
-                for r in ref:
-                    cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[r], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-            # cb.ax.hlines((np.linspace(0, 1, len(params)+1)[:-1]+0.5/(len(params)+1))[ref], 0, 1, color='white', linestyle='--', linewidth=2, alpha=0.8)
-        return fig, axes, cb
+    cb = add_colorbar(fig=fig, axes=axes, params=params, param_str=param_str, ref=ref, palette=palette, use_linestyles=use_linestyles)
     return fig, axes, None
-
 
 
 #### New functions for plotting fdf
