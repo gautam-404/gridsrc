@@ -198,7 +198,7 @@ def plot_fdf(fig, ax, df_master, m, z, v, age, params, param_name='param',
     else:
         update_fdf_x(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
     if colorbar:
-        fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
+        fig, ax, cb = add_colorbar(fig=fig, axes=ax, params=params, param_str=param_str, ref=ref, palette=palette, use_linestyles=use_linestyles)
     else:
         cb = None
     return fig, ax, cb
@@ -214,7 +214,7 @@ def animate_fdf(fig, ax, df_master, m, z, v, ages, params,
     palette, linestyles = configure_plot_style(use_linestyles, params, transparent, bgcolor)
     markers = ['o', '^', 's', 'd'] # Define markers outside the function if they are shared with plot_fdf
 
-    fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
+    fig, ax, cb = add_colorbar(fig=fig, axes=ax, params=params, param_str=param_str, ref=ref, palette=palette, use_linestyles=use_linestyles)
 
     def update(age):
         return update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
@@ -341,7 +341,7 @@ def interactive_fdf(df_master, m, z, v, ages, params, param_name, param_str, ref
     def plot_with_age(age, figsize):
         fig, ax = plt.subplots(figsize=figsize)
         update_fdf_y(ax, df_master, age, m, z, v, params, ref, palette, markers, xlim, ylim)
-        fig, ax, cb = add_colorbar(fig, ax, params, param_str, ref, palette)
+        fig, ax, cb = add_colorbar(fig=fig, axes=ax, params=params, param_str=param_str, ref=ref, palette=palette, use_linestyles=use_linestyles)
         plt.show()
 
     age_slider = FloatSlider(value=age_min, min=age_min, max=age_max, step=d_age, description='Age:', **widget_kwargs)
@@ -574,7 +574,7 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
     title = fig.suptitle(f'Age = {ages[age_start_idx]:.2f} Myr', fontsize=20, weight="bold", x=0.47, y=0.95)
     fig.align_ylabels()
     colors = sns.color_palette("magma_r", len(params))
-    cb = add_colorbar(fig=fig, ax=axes[len(m)-1], params=params, param_str=param_str, palette=colors, ref=ref)
+    cb = add_colorbar(fig=fig, axes=axes[len(m)-1], params=params, param_str=param_str, palette=colors, ref=ref)
 
     if interactive:
         from ipywidgets import interactive, fixed
