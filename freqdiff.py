@@ -523,7 +523,10 @@ def update_comp_plots(age, axes, df_master, ages, m, z, v, params, param_name, p
                 ax.set_xlim(ages[0], ages[-1])
                 if not subplot_diff:
                     ax.set_ylabel(subplot_labels[j], fontsize=20, weight="bold")
-                    ax.set_ylim(ylims_min[j][i]*0.9, ylims_max[j][i]*1.1)
+                    if ylims_min[j][i] < 0:
+                        ax.set_ylim(ylims_min[j][i]*1.1, ylims_max[j][i]*1.1)
+                    else:
+                        ax.set_ylim(ylims_min[j][i]*0.9, ylims_max[j][i]*1.1)
                 else:
                     # ax.set_ylabel(r"$\delta$ "+subplot_labels[j], fontsize=20, weight="bold")
                     ax.set_ylabel(f"Frac. diff. in {subplot_labels[j]}", fontsize=20, weight="bold")
@@ -583,11 +586,12 @@ def comp_plots(fig, df_master, ages, m, z, v, params, param_name, param_str, ref
         axes = np.array([[fig.add_subplot(upper[i][0])] + [fig.add_subplot(lower[i][j]) for j in range(len(subplot_params))] for i in range(len(m))])
     else:
         axes = np.array([[fig.add_subplot(outer[i])] for i in range(len(m))])
-    # plt.close()
     title = fig.suptitle(f'Age = {ages[age_start_idx]:.2f} Myr', fontsize=20, weight="bold", x=0.47, y=0.95)
     fig.align_ylabels()
     colors = sns.color_palette("magma_r", len(params))
     cb = add_colorbar(fig=fig, axes=axes[len(m)-1], params=params, param_str=param_str, palette=colors, ref=ref)
+    plt.close()
+    display.clear_output(wait=False)
 
     if interactive:
         from ipywidgets import interactive, fixed
