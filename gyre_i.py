@@ -59,7 +59,10 @@ def untar_profiles(profiles_tar, jobfs=None):
     profiles_dir = os.path.join(jobfs, profiles_tar.split('/')[-1].split('.tar.gz')[0])
     with tarfile.open(profiles_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
-        tar.extractall(path=jobfs, members=members, filter='data')
+        if sys.version_info[1] >= 12:
+            tar.extractall(path=jobfs, members=members, filter='data')
+        else:
+            tar.extractall(path=jobfs, members=members)
     return profiles_dir
 
 def get_gyre_params(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
@@ -143,6 +146,9 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
         print(e)
         print("Failed to copy GYRE log file")
     freq_files = glob.glob(os.path.join(profiles_dir, "*-freqs.dat"))
+    print(profiles_dir)
+    print(glob.glob(profiles_dir+"/*"))
+    print(freq_files)
     if len(freq_files) > 0:
         with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "w:gz") as tar:
             for f in freq_files:
