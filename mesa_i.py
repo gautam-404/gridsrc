@@ -39,7 +39,7 @@ def check_if_done(name_og, archive_path):
         print(f"Track {name_og} not previously done. Running...")
         return False
 
-def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="grid_archive",
+def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="grid_archive", reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"],
                logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
                uniform_rotation=True, additional_params={}, trace=None, overwrite=False, dev=False, high_temporal_res=True):
     """
@@ -223,7 +223,6 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     #### RUN ####
                     ## proj.run() for first run, proj.resume() for subsequent runs
                     ## These raise exceptions if the run fails and return termination code + age otherwise
-                    reqd_phases = ["Create Pre-MS Model",  "Pre-MS Evolution", "Early MS Evolution", "Evolution to TAMS", "Evolution post-MS"]
                     shutil.copy(os.path.join(name, "inlist_project"), os.path.join(archive_path, "inlists", f"inlists_{name_og}", f"inlist_{phase_name.replace(' ', '_')}"))
                     if phase_name == reqd_phases[0]:
                         termination_code, age = proj.run(logging=logging, parallel=parallel, trace=trace, env=os.environ.copy())
