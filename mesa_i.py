@@ -43,7 +43,7 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                logging=True, parallel=False, cpu_this_process=1, produce_track=True, 
                uniform_rotation=True, additional_params={}, trace=None, overwrite=False, dev=False, high_temporal_res=True):
     """
-    dSct star evolution. Testing function. i'th track.
+    dSct star evolution. i'th track.
 
     Parameters
     ----------
