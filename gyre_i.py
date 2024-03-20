@@ -59,7 +59,7 @@ def untar_profiles(profiles_tar, jobfs=None):
     profiles_dir = os.path.join(jobfs, profiles_tar.split('/')[-1].split('.tar.gz')[0])
     with tarfile.open(profiles_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
-        tar.extractall(path=jobfs, members=members)
+        tar.extractall(path=jobfs, members=members, filter='data')
     return profiles_dir
 
 def get_gyre_params(archive_name, suffix=None, zinit=None, run_on_cool=False, file_format="GYRE"):
