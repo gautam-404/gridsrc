@@ -392,7 +392,7 @@ def plot_mean_ff(fig, ax, df_master, m, z, v, age, ages, params, param_name='par
     # ax.set_ylim(min_val-0.1, max_val+0.1)
     lim = max(abs(min_val), abs(max_val))
     ax.set_ylim(-1.1*lim, 1.1*lim)
-    ax.set_xlim(5, 25)
+    ax.set_xlim(ages[0], ages[-1])
     
     ax.axhline(0, ls='dashed', color='grey')
     ax.set_xlabel('Age (Myr)', size=25, weight='bold')
