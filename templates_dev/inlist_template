@@ -87,7 +87,7 @@
 	write_profiles_flag = .true. 
 	write_pulse_data_with_profile = .true.
 	pulse_data_format = 'GSM'
-	! gyre_data_schema = 120
+	gyre_data_schema = 120
 	add_atmosphere_to_pulse_data = .true.
 	profile_data_prefix = 'profile'
 	profiles_index_name = 'profiles.index'
