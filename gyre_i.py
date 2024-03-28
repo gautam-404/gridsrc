@@ -146,9 +146,6 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
         print(e)
         print("Failed to copy GYRE log file")
     freq_files = glob.glob(os.path.join(profiles_dir, "*-freqs.dat"))
-    print(profiles_dir)
-    print(glob.glob(profiles_dir+"/*"))
-    print(freq_files)
     if len(freq_files) > 0:
         with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "w:gz") as tar:
             for f in freq_files:
