@@ -30,7 +30,7 @@ def check_if_done(archive_dir, track):
     else:
         return False
 
-def untar_profiles(profiles_tar, jobfs=None):
+def untar_profiles(profiles_tar, track, jobfs=None):
     """
     Untar all the profiles from a tarball into the jobfs directory.
     """
@@ -56,7 +56,7 @@ def untar_profiles(profiles_tar, jobfs=None):
     if not os.path.exists(jobfs):
         raise FileNotFoundError(f"Jobfs directory {jobfs} not found")
     
-    profiles_dir = os.path.join(jobfs, profiles_tar.split('/')[-1].split('.tar.gz')[0])
+    profiles_dir = os.path.join(jobfs, f'profiles_{track}')
     with tarfile.open(profiles_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
         if sys.version_info[1] >= 12:
@@ -176,7 +176,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
             raise RuntimeError("No profiles to run GYRE on")
         else:
             print(f"{len(profiles)} profiles found to run GYRE on\n")
-        profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), jobfs=jobfs)
+        profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), track=track, jobfs=jobfs)
 
         print("Running GYRE...\n")
         os.environ['OMP_NUM_THREADS'] = '1'
