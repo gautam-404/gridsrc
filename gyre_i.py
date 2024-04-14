@@ -9,6 +9,7 @@ import shutil
 import time
 import platform
 from rich import print
+from pathlib import Path
 
 from . import helper
 
@@ -59,7 +60,7 @@ def untar_profiles(profiles_tar, track, jobfs=None):
     profiles_dir = os.path.join(jobfs, f'profiles_{track}')
     with tarfile.open(profiles_tar, 'r:gz') as tar:
         members = [m for m in tar.getmembers() if '.GSM' in m.name or '.GYRE' in m.name]
-        if sys.version_info[1] >= 12:
+        if sys.version_info[1] >= 12: ## python 3.12
             tar.extractall(path=jobfs, members=members, filter='data')
         else:
             tar.extractall(path=jobfs, members=members)
@@ -145,7 +146,7 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     except Exception as e:
         print(e)
         print("Failed to copy GYRE log file")
-    freq_files = glob.glob(os.path.join(profiles_dir, "*-freqs.dat"))
+    freq_files = [str(p) for p in Path(profiles_dir).rglob("*-freqs.dat") if p.is_file()]
     if len(freq_files) > 0:
         with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "w:gz") as tar:
             for f in freq_files:
@@ -172,6 +173,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
         zinit = float(track.split('_')[1].split('z')[-1])
 
         profiles, gyre_input_params = get_gyre_params(archive_dir, suffix=track, zinit=zinit, file_format=file_format, run_on_cool=True)
+
         if len(profiles) == 0:
             raise RuntimeError("No profiles to run GYRE on")
         else:
