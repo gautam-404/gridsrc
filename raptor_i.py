@@ -109,7 +109,7 @@ def get_hist(archive_dir, index):
         suffix = f'm{m}_z{z}_v{v}_param{param_idx}'
     else:
         suffix = f'm{m}_z{z}_v{v}'
-    h = pd.read_csv(os.path.join(archive_dir, 'histories', f'history_{suffix}.data'), delim_whitespace=True, skiprows=5)
+    h = pd.read_csv(os.path.join(archive_dir, 'histories', f'history_{suffix}.data'), sep='\s+', skiprows=5)
     h['m'] = m
     h['z'] = z
     h['v'] = v
@@ -119,7 +119,7 @@ def get_hist(archive_dir, index):
     h['teff'] = np.round(np.power(10, h['log_Teff']), 2)
     h['density'] = h['star_mass'] / np.power(10, h['log_R']) ** 3
     profile_index = pd.read_csv(os.path.join(archive_dir, 'profile_indexes', f'profiles_{suffix}.index'), 
-                                    skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
+                                    skiprows=1, names=['model_number', 'priority', 'profile_number'], sep='\s+')
     h = pd.merge(h, profile_index, on='model_number', how='inner').drop_duplicates()
     return h, suffix
 

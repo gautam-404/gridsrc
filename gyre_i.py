@@ -94,11 +94,11 @@ def get_gyre_params(archive_name, suffix=None, zinit=None, run_on_cool=False, fi
     else:
         histfile = os.path.join(archive_name, "histories", f"history_{suffix}.data")
         pindexfile = os.path.join(archive_name, "profile_indexes", f"profiles_{suffix}.index")
-    h = pd.read_csv(histfile, delim_whitespace=True, skiprows=5)
+    h = pd.read_csv(histfile, sep='\s+', skiprows=5)
     h["Zfrac"] = 1 - h["average_h1"] - h["average_he4"]
     h["Myr"] = h["star_age"]*1.0E-6
     h["density"] = h["star_mass"]/np.power(10,h["log_R"])**3
-    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
+    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], sep='\s+')
     h = pd.merge(h, p, on='model_number', how='inner')
     gyre_start_age = 0
     gyre_intake = h.query(f"Myr > {gyre_start_age/1e6}")

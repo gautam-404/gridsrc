@@ -36,8 +36,8 @@ def get_gyre_params_archived(track_index, grid_archive, profiles_archive, file_f
     '''
     histfile = os.path.join(grid_archive, f"histories/history_{track_index}.data")
     pindexfile = os.path.join(grid_archive, f"profile_indexes/profiles_{track_index}.index")
-    h = pd.read_csv(histfile, delim_whitespace=True, skiprows=5)
-    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
+    h = pd.read_csv(histfile, sep='\s+', skiprows=5)
+    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], sep='\s+')
     h = pd.merge(h, p, on='model_number', how='right')
     h["Zfrac"] = 1 - h["average_h1"] - h["average_he4"]
     h["Myr"] = h["star_age"]*1.0E-6
@@ -53,7 +53,7 @@ def get_gyre_params_archived(track_index, grid_archive, profiles_archive, file_f
         # profile_file = f"{name}/LOGS/profile{p}.data.{file_format}"
         profile_file = os.path.join(profiles_archive, f"profile{p}.data.{file_format}")
         if zinit == None:
-            zinit = pd.read_csv(profile_file, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
+            zinit = pd.read_csv(profile_file, header=1, nrows=1, sep='\s+')['initial_z'].values[0]
             
         ###Checks###
         # if not os.path.exists(profile_file):
@@ -112,8 +112,8 @@ def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=
     else:
         histfile = f"{archive_name}/histories/history_{suffix}.data"
         pindexfile = f"{archive_name}/profile_indexes/profiles_{suffix}.index"
-    h = pd.read_csv(histfile, delim_whitespace=True, skiprows=5)
-    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
+    h = pd.read_csv(histfile, sep='\s+', skiprows=5)
+    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], sep='\s+')
     h = pd.merge(h, p, on='model_number', how='right')
     h["Zfrac"] = 1 - h["average_h1"] - h["average_he4"]
     h["Myr"] = h["star_age"]*1.0E-6
@@ -131,7 +131,7 @@ def get_gyre_params_archived(archive_name, suffix=None, zinit=None, run_on_cool=
             mesa_profile = f"{archive_name}/profiles/profiles_{suffix}/profile{p}.data"
             gyre_profile = f"{archive_name}/profiles/profiles_{suffix}/profile{p}.data.{file_format}"
         if zinit == None:
-            zinit = pd.read_csv(mesa_profile, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
+            zinit = pd.read_csv(mesa_profile, header=1, nrows=1, sep='\s+')['initial_z'].values[0]
             
         ###Checks###
         # if not os.path.exists(profile_file):
@@ -185,8 +185,8 @@ def get_gyre_params(name, zinit=None, run_on_cool=False, file_format="GYRE"):
     '''
     histfile = f"{name}/LOGS/history.data"
     pindexfile = f"{name}/LOGS/profiles.index"
-    h = pd.read_csv(histfile, delim_whitespace=True, skiprows=5)
-    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], delim_whitespace=True)
+    h = pd.read_csv(histfile, sep='\s+', skiprows=5)
+    p = pd.read_csv(pindexfile, skiprows=1, names=['model_number', 'priority', 'profile_number'], sep='\s+')
     h = pd.merge(h, p, on='model_number', how='right')
     h["Zfrac"] = 1 - h["average_h1"] - h["average_he4"]
     h["Myr"] = h["star_age"]*1.0E-6
@@ -199,7 +199,7 @@ def get_gyre_params(name, zinit=None, run_on_cool=False, file_format="GYRE"):
         p = int(row["profile_number"])
         profile_file = f"{name}/LOGS/profile{p}.data.{file_format}"
         if zinit == None:
-            zinit = pd.read_csv(profile_file, header=1, nrows=1, delim_whitespace=True)['initial_z'].values[0]
+            zinit = pd.read_csv(profile_file, header=1, nrows=1, sep='\s+')['initial_z'].values[0]
             
         ###Checks###
         # if not os.path.exists(profile_file):
