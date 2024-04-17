@@ -74,9 +74,9 @@ def process_freqs_file(file, h_master):
                                 freqs = ts.query(f'n_pg=={n_pg} and l=={l} and m==0').freq.values
                                 if len(freqs) > 0:
                                     kwargs1 = {f'n{n_pg}ell{l}m0': np.round(freqs[0], 6)}
-                                    h.assign(**kwargs1)
+                                    h = h.assign(**kwargs1)
                                     kwargs2 = {f'n{n_pg}ell{l}dfreq': lambda x: np.round(ts.query(f'n_pg=={n_pg} and l=={l} and m==0').dfreq_rot.values[0], 6)}
-                                    h.assign(**kwargs2)
+                                    h = h.assign(**kwargs2)
                             if n in n_g_list and l>0:
                                 n_g = n
                                 freqs = ts.query(f'n_g=={n_g} and l=={l} and m==0').freq.values
@@ -85,10 +85,9 @@ def process_freqs_file(file, h_master):
                                     if len(freqs_m1) > 0:
                                         kwargs2 = {f'ng{n_g}ell{l}dfreq': lambda x: np.round(freqs_m1[0], 6) 
                                                 - np.round(freqs[0], 6)}
-                                        h.assign(**kwargs2)
+                                        h = h.assign(**kwargs2)      
                                         kwargs1 = {f'ng{n_g}ell{l}m0': np.round(freqs[0], 6)}
-                                        h.assign(**kwargs1)
-                                    
+                                        h = h.assign(**kwargs1)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)   
     return h_final
