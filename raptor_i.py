@@ -7,51 +7,48 @@ import argparse
 import time
 from rich import print
 
+def fit_line(x, y):
+    if len(x) > 1:
+        slope, intercept = np.polyfit(x, y, 1)
+        return len(x), slope, intercept
+    else:
+        return len(x), 0, 0  # Return zero slope and intercept if not enough points
+
 def fit_radial(ts, degree=0):
     n_min, n_max = 5, 9
     try:
-        vert_freqs = ts.query('n_g == 0').query(f'l=={degree}').query(f'n_pg>={n_min}').query(f'n_pg<={n_max}')[
-            ['n_pg', 'freq']].values
-    except:
-        vert_freqs = ts.query(f'l_obs=={degree}').query(f'n_obs>={n_min}').query(f'n_obs<={n_max}')[
-            ['n_obs', 'f_obs']].values
-    if len(vert_freqs > 0):
-        slope, intercept = np.polyfit(vert_freqs[:, 0], vert_freqs[:, 1], 1)
-        r_value, p_value, std_err = 0, 0, 0
+        query_string = f'n_g == 0 and l == {degree} and {n_min} <= n_pg <= {n_max}'
+        vert_freqs = ts.query(query_string)[['n_pg', 'freq']].values
+    except (KeyError, ValueError):
+        query_string = f'l_obs == {degree} and {n_min} <= n_obs <= {n_max}'
+        vert_freqs = ts.query(query_string)[['n_obs', 'f_obs']].values
+    if len(vert_freqs) > 0:
+        return fit_line(vert_freqs[:, 0], vert_freqs[:, 1])
     else:
-        slope, intercept, r_value, p_value, std_err = np.zeros(5)
-    return len(vert_freqs), slope, intercept, r_value, p_value, std_err
-
+        return 0, 0, 0  # Not enough data, return zero values
 
 def epsilon(ts):
-    length_rad, slope, intercept, r_value, p_value, std_err = fit_radial(ts, degree=0)
-    eps = intercept / slope
+    length_rad, slope, intercept = fit_radial(ts, degree=0)
+    if slope != 0:
+        eps = intercept / slope
+    else:
+        eps = 0
     if length_rad < 3:
-        length_dip, slope, intercept, r_value, p_value, std_err = fit_radial(ts, degree=1)
-        if length_dip > length_rad:
-            eps = intercept / slope - 0.5
+        length_dip, slope_dip, intercept_dip = fit_radial(ts, degree=1)
+        if length_dip > length_rad and slope_dip != 0:
+            eps = intercept_dip / slope_dip - 0.5   # adjusting by -0.5 if dipole is more reliable
     return np.round(eps, 3)
 
-
 def model_Dnu(ts):
-    length_rad, slope, intercept, r_value, p_value, std_err = fit_radial(ts, degree=0)
+    length_rad, slope, intercept = fit_radial(ts, degree=0)
     if length_rad < 3:
-        length_dip, slope, intercept, r_value, p_value, std_err = fit_radial(ts, degree=1)
-        if length_rad > length_dip:
-            length_rad, slope, intercept, r_value, p_value, std_err = fit_radial(ts, degree=0)
-    Dnu = slope
-    return np.round(Dnu, 3)
+        length_dip, slope_dip, intercept_dip = fit_radial(ts, degree=1)
+        if length_dip > length_rad:
+            slope = slope_dip   # use dipole if it's more reliable
+    return np.round(slope, 3)
 
 
-def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labels):
-    ## Add empty mode labels
-    ## All other straightforward methods of doing this gave performance warnings and fragmented dataframe
-    ## Concat works fine
-    extra_columns = ['omega', 'R_eq', 'R_polar', 'omega_c', 'Dnu', 'eps']
-    nan_array = np.full((len(h_master), len(mode_labels+dfreq_labels+dfreq_rot_labels+extra_columns)), np.nan)
-    new_cols_df = pd.DataFrame(nan_array, columns=mode_labels+dfreq_labels+dfreq_rot_labels+extra_columns)
-    h_master = pd.concat([h_master, new_cols_df], axis=1)
-
+def process_freqs_file(file, h_master):
     ## Group by profile number
     grouped_h_master = h_master.groupby('profile_number')
     h_final_list = []
@@ -67,16 +64,33 @@ def process_freqs_file(file, h_master, mode_labels, dfreq_labels, dfreq_rot_labe
                     ts.rename(columns={'Re(freq)': 'freq'}, inplace=True)
                     h["Dnu"] = model_Dnu(ts)
                     h["eps"] = epsilon(ts)
-                    for i, label in enumerate(mode_labels):
-                        n = int(label.split('n')[-1].split('ell')[0])
-                        l = int(label.split('ell')[-1].split('m')[0])
-                        m = 0
-                        freq = ts.query(f'n_pg=={n} and l=={l} and m=={m}')['freq'].values
-                        if len(freq) > 0:
-                            h[label] = np.round(freq[0], 6)
-                            h[f'n{n}ell{l}dfreq_rot'] = np.round(ts[(ts['n_pg'] == n) & (ts['l'] == l) & (ts['m'] == m)]['dfreq_rot'].values[0], 6)
+                    n_g_list = ts.n_g.unique()[1:]
+                    n_pg_list = ts.n_pg.unique()
+                    l_max = 3
+                    for l in range(0, l_max+1):
+                        for n in range(1, 11):
+                            if n in n_pg_list:
+                                n_pg = n
+                                freqs = ts.query(f'n_pg=={n_pg} and l=={l} and m==0').freq.values
+                                if len(freqs) > 0:
+                                    kwargs1 = {f'n{n_pg}ell{l}m0': np.round(freqs[0], 6)}
+                                    h.assign(**kwargs1)
+                                    kwargs2 = {f'n{n_pg}ell{l}dfreq': lambda x: np.round(ts.query(f'n_pg=={n_pg} and l=={l} and m==0').dfreq_rot.values[0], 6)}
+                                    h.assign(**kwargs2)
+                            if n in n_g_list and l>0:
+                                n_g = n
+                                freqs = ts.query(f'n_g=={n_g} and l=={l} and m==0').freq.values
+                                if len(freqs) > 0:
+                                    freqs_m1 = ts.query(f'n_g=={n_g} and l=={l} and m==1').freq.values
+                                    if len(freqs_m1) > 0:
+                                        kwargs2 = {f'ng{n_g}ell{l}dfreq': lambda x: np.round(freqs_m1[0], 6) 
+                                                - np.round(freqs[0], 6)}
+                                        h.assign(**kwargs2)
+                                        kwargs1 = {f'ng{n_g}ell{l}m0': np.round(freqs[0], 6)}
+                                        h.assign(**kwargs1)
+                                    
                     h_final_list.append(h)
-    h_final = pd.concat(h_final_list)
+    h_final = pd.concat(h_final_list)   
     return h_final
 
 
@@ -84,15 +98,18 @@ def get_gyre_freqs(archive_dir, hist, suffix):
     file = os.path.join(archive_dir, 'gyre', f'freqs_{suffix}.tar.gz')
     l_max = 3
     mode_labels = []
-    dfreq_labels = []
+    mode_labels_g = []
+    dfreq_labels_g = []
     dfreq_rot_labels = []
     for l in range(0, l_max+1):
         for n in range(1, 11):
             mode_labels.append(f'n{n}ell{l}m0')
             dfreq_rot_labels.append(f'n{n}ell{l}dfreq_rot')
-            # if l > 0:
-            #     dfreq_labels.append(f'n{n}ell{l}dfreq')
-    hist = process_freqs_file(file, hist, mode_labels, dfreq_labels, dfreq_rot_labels)
+            if l > 0:
+                mode_labels_g.append(f'ng{n}ell{l}m0')
+                dfreq_labels_g.append(f'ng{n}ell{l}dfreq')
+    # hist = process_freqs_file(file, hist, mode_labels, dfreq_rot_labels, mode_labels_g, dfreq_labels_g)
+    hist = process_freqs_file(file, hist)
     return hist
 
 
@@ -109,7 +126,23 @@ def get_hist(archive_dir, index):
         suffix = f'm{m}_z{z}_v{v}_param{param_idx}'
     else:
         suffix = f'm{m}_z{z}_v{v}'
+    
+    logfn = os.path.join(archive_dir, 'runlogs', f'run_{suffix}.log')
+    gyrelogfn = os.path.join(archive_dir, 'gyre', f'gyre_{suffix}.log')
+    with open(logfn, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if "Total time" in line:
+                mesa_run_time = float(line.split(" ")[-2])
+    with open(gyrelogfn, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if "Total time" in line:
+                gyre_run_time = float(line.split(" ")[-2])
+    
     h = pd.read_csv(os.path.join(archive_dir, 'histories', f'history_{suffix}.data'), sep='\s+', skiprows=5)
+    h['mesa_run_time'] = mesa_run_time
+    h['gyre_run_time'] = gyre_run_time
     h['m'] = m
     h['z'] = z
     h['v'] = v
