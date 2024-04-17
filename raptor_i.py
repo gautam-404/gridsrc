@@ -93,22 +93,8 @@ def process_freqs_file(file, h_master):
     h_final = pd.concat(h_final_list)   
     return h_final
 
-
 def get_gyre_freqs(archive_dir, hist, suffix):
     file = os.path.join(archive_dir, 'gyre', f'freqs_{suffix}.tar.gz')
-    l_max = 3
-    mode_labels = []
-    mode_labels_g = []
-    dfreq_labels_g = []
-    dfreq_rot_labels = []
-    for l in range(0, l_max+1):
-        for n in range(1, 11):
-            mode_labels.append(f'n{n}ell{l}m0')
-            dfreq_rot_labels.append(f'n{n}ell{l}dfreq_rot')
-            if l > 0:
-                mode_labels_g.append(f'ng{n}ell{l}m0')
-                dfreq_labels_g.append(f'ng{n}ell{l}dfreq')
-    # hist = process_freqs_file(file, hist, mode_labels, dfreq_rot_labels, mode_labels_g, dfreq_labels_g)
     hist = process_freqs_file(file, hist)
     return hist
 
