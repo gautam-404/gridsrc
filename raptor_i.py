@@ -69,16 +69,14 @@ def process_freqs_file(file, h_master):
                     l_max = 3
                     for l in range(0, l_max+1):
                         for n in range(1, 11):
-                            if n in n_pg_list:
-                                n_pg = n
+                            if n_pg in n_pg_list:
                                 freqs = ts.query(f'n_pg=={n_pg} and l=={l} and m==0').freq.values
                                 if len(freqs) > 0:
                                     kwargs1 = {f'n{n_pg}ell{l}m0': np.round(freqs[0], 6)}
                                     h.assign(**kwargs1)
                                     kwargs2 = {f'n{n_pg}ell{l}dfreq': lambda x: np.round(ts.query(f'n_pg=={n_pg} and l=={l} and m==0').dfreq_rot.values[0], 6)}
                                     h.assign(**kwargs2)
-                            if n in n_g_list and l>0:
-                                n_g = n
+                            if n_g in n_g_list and l>0:
                                 freqs = ts.query(f'n_g=={n_g} and l=={l} and m==0').freq.values
                                 if len(freqs) > 0:
                                     freqs_m1 = ts.query(f'n_g=={n_g} and l=={l} and m==1').freq.values
