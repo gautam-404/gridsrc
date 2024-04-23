@@ -27,6 +27,7 @@ def fit_radial(ts, degree=0):
     else:
         return 0, 0, 0  # Not enough data, return zero values
 
+
 def epsilon(ts):
     length_rad, slope, intercept = fit_radial(ts, degree=0)
     if slope != 0:
@@ -59,34 +60,30 @@ def process_freqs_file(file, h_master):
                 profile_number = int(member.name.split('-freqs.dat')[0].split('profile')[-1])
                 if profile_number in grouped_h_master.groups:
                     h = grouped_h_master.get_group(profile_number).copy()
-                    ts = pd.read_fwf(tar.extractfile(member), skiprows=5)
-                    ts.drop(columns=['M_star', 'R_star', 'Im(freq)', 'E_norm'], inplace=True)
-                    ts.rename(columns={'Re(freq)': 'freq'}, inplace=True)
+                    with tar.extractfile(member) as file:
+                        ts = pd.read_fwf(file, skiprows=5)
+                        ts.drop(columns=['M_star', 'R_star', 'Im(freq)', 'E_norm'], inplace=True)
+                        ts.rename(columns={'Re(freq)': 'freq'}, inplace=True)
                     h["Dnu"] = model_Dnu(ts)
                     h["eps"] = epsilon(ts)
-                    n_g_list = ts.n_g.unique()[1:]
                     n_pg_list = ts.n_pg.unique()
                     l_max = 3
                     for l in range(0, l_max+1):
-                        for n in range(1, 11):
-                            if n in n_pg_list:
-                                n_pg = n
-                                freqs = ts.query(f'n_pg=={n_pg} and l=={l} and m==0').freq.values
-                                if len(freqs) > 0:
+                        for n_pg in n_pg_list:
+                            freqs = ts.query(f'n_pg=={n_pg} and l=={l} and m==0').freq.values
+                            if len(freqs) > 0:
+                                if n_pg >= 0:
                                     kwargs1 = {f'n{n_pg}ell{l}m0': np.round(freqs[0], 6)}
                                     h = h.assign(**kwargs1)
                                     kwargs2 = {f'n{n_pg}ell{l}dfreq': lambda x: np.round(ts.query(f'n_pg=={n_pg} and l=={l} and m==0').dfreq_rot.values[0], 6)}
                                     h = h.assign(**kwargs2)
-                            if n in n_g_list and l>0:
-                                n_g = n
-                                freqs = ts.query(f'n_g=={n_g} and l=={l} and m==0').freq.values
-                                if len(freqs) > 0:
-                                    freqs_m1 = ts.query(f'n_g=={n_g} and l=={l} and m==1').freq.values
+                                if n_pg < 0 and l > 0:
+                                    freqs_m1 = ts.query(f'n_pg=={n_pg} and l=={l} and m==1').freq.values
                                     if len(freqs_m1) > 0:
-                                        kwargs2 = {f'ng{n_g}ell{l}dfreq': lambda x: np.round(freqs_m1[0], 6) 
+                                        kwargs2 = {f'ng{n_pg}ell{l}dfreq': lambda x: np.round(freqs_m1[0], 6) 
                                                 - np.round(freqs[0], 6)}
                                         h = h.assign(**kwargs2)      
-                                        kwargs1 = {f'ng{n_g}ell{l}m0': np.round(freqs[0], 6)}
+                                        kwargs1 = {f'ng{n_pg}ell{l}m0': np.round(freqs[0], 6)}
                                         h = h.assign(**kwargs1)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)   
