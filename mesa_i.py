@@ -71,8 +71,9 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
         Useful if you want to run GYRE on an existing track.
     uniform_rotation : bool, optional
         Uniform rotation, by default True
-    additional_params : dict, optional
+    additional_params : dict or dict of dicts, optional
         Additional parameters to be set in inlist, by default {}
+        If dict of dicts, each dict will be set at the corresponding phase.
     trace : dict, optional
         MESA-PORT trace, by default None
     overwrite : bool, optional
@@ -193,7 +194,12 @@ def evo_star_i(name, mass, metallicity, v_surf_init, param={}, archive_path="gri
                     if len(param) > 0 and param is not None:
                         star.set(param, force=True)
                     if len(additional_params) > 0 and additional_params is not None:
-                        star.set(additional_params, force=True)
+                        if isinstance(additional_params, dict):
+                            if isinstance(additional_params[list(additional_params.keys())[0]], dict):
+                                if phase_name in additional_params.keys():
+                                    star.set(additional_params[phase_name], force=True)
+                            else:
+                                star.set(additional_params, force=True)
 
                     ## History and profile interval
                     star.set({'history_interval':1, "profile_interval":profile_interval.pop(0), "max_num_profile_models":6000})
