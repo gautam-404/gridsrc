@@ -167,7 +167,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
     inputs = pd.read_csv(input_file)
     track = inputs.iloc[index]['track']
     print(f"Running GYRE for track {track}\n")
-    if check_if_done(archive_dir, index):
+    if check_if_done(archive_dir, track):
         print("GYRE already run on this archive\n")
     else:
         zinit = float(track.split('_')[1].split('z')[-1])
