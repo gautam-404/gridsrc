@@ -154,6 +154,9 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     '''
     Save the GYRE outputs to a tarball in the archive directory.
     '''
+    if os.path.exists(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz")):
+        with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "r:gz") as tar:
+            tar.extractall(path=profiles_dir)
     freq_files = [str(p) for p in Path(profiles_dir).rglob("*-freqs.dat") if p.is_file()]
     if len(freq_files) > 0:
         with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "w:gz") as tar:
