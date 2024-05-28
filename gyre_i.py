@@ -14,14 +14,14 @@ from pathlib import Path
 from . import helper
 
 
-def check_if_done(archive_dir, track):
+def check_if_done(archive_dir, track, profiles):
     '''
     Check if GYRE has already been run on the given archive.
     '''
     if os.path.exists(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz")):
         try:
             with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz"), "r:gz") as tar:
-                if len(tar.getnames()) > 0:
+                if len(tar.getnames()) > 0 and all([p in tar.getnames() for p in profiles]):
                     return True
                 else:
                     return False
@@ -30,6 +30,20 @@ def check_if_done(archive_dir, track):
             return False
     else:
         return False
+
+def get_done_profile_idxs(archive_dir, track):
+    '''
+    Get the profile indexes for which GYRE has already been run.
+    '''
+    if os.path.exists(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz")):
+        try:
+            with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz"), "r:gz") as tar:
+                return sorted([int(p.split('-')[0].split('profile')[-1]) for p in tar.getnames()])
+        except:
+            print("Error reading previously saved freqs tar")
+            return []
+    else:
+        return []
 
 def untar_profiles(profiles_tar, track, jobfs=None):
     """
@@ -140,12 +154,6 @@ def save_gyre_outputs(profiles_dir, archive_dir, suffix):
     '''
     Save the GYRE outputs to a tarball in the archive directory.
     '''
-    try: 
-        shutil.copy(os.path.join(profiles_dir, "gyre.log"), os.path.join(archive_dir, "gyre", f"gyre_{suffix}.log"))
-        print("Copied GYRE log file")
-    except Exception as e:
-        print(e)
-        print("Failed to copy GYRE log file")
     freq_files = [str(p) for p in Path(profiles_dir).rglob("*-freqs.dat") if p.is_file()]
     if len(freq_files) > 0:
         with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{suffix}.tar.gz"), "w:gz") as tar:
@@ -167,41 +175,56 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
     inputs = pd.read_csv(input_file)
     track = inputs.iloc[index]['track']
     print(f"Running GYRE for track {track}\n")
-    if check_if_done(archive_dir, track):
+
+    zinit = float(track.split('_')[1].split('z')[-1])
+    profiles, gyre_input_params = get_gyre_params(archive_dir, suffix=track, zinit=zinit, file_format=file_format, run_on_cool=True)
+    if len(profiles) == 0:
+        raise RuntimeError("No profiles to run GYRE on")
+    else:
+        print(f"{len(profiles)} profiles found\n")
+
+    if check_if_done(archive_dir, track, profiles):
         print("GYRE already run on this archive\n")
     else:
-        zinit = float(track.split('_')[1].split('z')[-1])
-
-        profiles, gyre_input_params = get_gyre_params(archive_dir, suffix=track, zinit=zinit, file_format=file_format, run_on_cool=True)
-
-        if len(profiles) == 0:
-            raise RuntimeError("No profiles to run GYRE on")
-        else:
-            print(f"{len(profiles)} profiles found to run GYRE on\n")
         profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), track=track, jobfs=jobfs)
+        done_profiles = get_done_profile_idxs(archive_dir, track)
+        print(f"{len(done_profiles)} profiles already done\n")
+        profiles = [p for i,p in enumerate(profiles) if i+1 not in done_profiles]
+        gyre_input_params = [p for i,p in enumerate(gyre_input_params) if i+1 not in done_profiles]
+        profiles_idx = sorted([int(p.split('-')[0].split('profile')[-1].split('.')[0]) for p in profiles])
 
-        print("Running GYRE...\n")
-        os.environ['OMP_NUM_THREADS'] = '1'
+        chunks = 50
         start_time = time.time()
-        proj = ProjectOps()
-        res = proj.runGyre(gyre_in=gyre_in, files=profiles,
-                        gyre_input_params=gyre_input_params, wdir=profiles_dir,
-                        parallel=True, n_cores=cpu_per_process,
-                        data_format=file_format, logging=True)
+        profile_chunks = [profiles[i:i+50] for i in range(0, len(profiles_idx), chunks)]
+        gyre_input_params_chunks = [gyre_input_params[i:i+50] for i in range(0, len(profiles_idx), chunks)]
+        for i, p_chunk in enumerate(profile_chunks):
+            print(f'Running GYRE on profiles {p_chunk[0]} to {p_chunk[-1]}')
+            os.environ['OMP_NUM_THREADS'] = '1'
+            with helper.cwd('.'):
+                proj = ProjectOps()
+                res = proj.runGyre(gyre_in=gyre_in, files=p_chunk,
+                                gyre_input_params=gyre_input_params_chunks[i], wdir=profiles_dir,
+                                parallel=True, n_cores=cpu_per_process,
+                                data_format=file_format, logging=True)
+            if not res:
+                raise RuntimeError("GYRE run failed")
+            try:
+                save_gyre_outputs(profiles_dir, archive_dir, track)
+                print(f"GYRE outputs saved\n")
+            except Exception as e:
+                print(e)
+                raise RuntimeError("Failed to save GYRE outputs")
         end_time = time.time()
+
         with open(f"{profiles_dir}/gyre.log", "a+") as f:
             f.write(f"Total time: {end_time-start_time} s\n\n")
-
-        if not res:
-            raise RuntimeError("GYRE run failed")
-        try:
-            save_gyre_outputs(profiles_dir, archive_dir, track)
-            print("GYRE outputs saved\n")
+        try: 
+            shutil.copy(os.path.join(profiles_dir, "gyre.log"), os.path.join(archive_dir, "gyre", f"gyre_{track}.log"))
+            print("Copied GYRE log file")
         except Exception as e:
             print(e)
-            raise RuntimeError("Failed to save GYRE outputs")
-        else:
-            shutil.rmtree(profiles_dir)
+            print("Failed to copy GYRE log file")
+        shutil.rmtree(profiles_dir)
 
 
 if __name__ == "__main__":
