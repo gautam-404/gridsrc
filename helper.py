@@ -32,9 +32,9 @@ def initial_abundances(Zinit):
     Input: Zinit
     Output: Yinit, initial_h1, initial_h2, initial_he3, initial_he4
     """
-    dZ = np.round(Zinit - Z_sun_bulk,4)
+    dZ = np.round(Zinit - Z_sun_bulk, 4)
     dY = dY_by_dZ * dZ
-    Yinit = np.round(Y_recommended + dY,4)
+    Yinit = np.round(Y_recommended + dY, 4)
     Xinit = 1 - Yinit - Zinit
 
     initial_h2 = h2_to_h1_ratio * Xinit

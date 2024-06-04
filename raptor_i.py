@@ -67,6 +67,7 @@ def process_freqs_file(file, h_master):
                     h["Dnu"] = model_Dnu(ts)
                     h["eps"] = epsilon(ts)
                     n_pg_list = ts.n_pg.unique()
+                    n_pg_list = [n_pg for n_pg in n_pg_list if -11 <= n_pg <= 11]
                     l_max = 3
                     for l in range(0, l_max+1):
                         for n_pg in n_pg_list:
@@ -96,7 +97,7 @@ def get_gyre_freqs(archive_dir, hist, suffix):
 
 
 def get_hist(archive_dir, index):
-    input_file = os.path.join(archive_dir, 'track_inputs.csv')
+    input_file = os.path.join(archive_dir, 'track_inputs_tmp.csv')
     inputs = pd.read_csv(input_file)
     track = inputs.iloc[index]['track']
     m = float(track.split('_')[0][1:])
