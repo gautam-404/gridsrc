@@ -81,10 +81,10 @@ def process_freqs_file(file, h_master):
                                 if n_pg < 0 and l > 0:
                                     freqs_m1 = ts.query(f'n_pg=={n_pg} and l=={l} and m==1').freq.values
                                     if len(freqs_m1) > 0:
-                                        kwargs2 = {f'ng{n_pg}ell{l}dfreq': lambda x: np.round(freqs_m1[0], 6) 
+                                        kwargs2 = {f'ng{abs(n_pg)}ell{l}dfreq': lambda x: np.round(freqs_m1[0], 6) 
                                                 - np.round(freqs[0], 6)}
                                         h = h.assign(**kwargs2)      
-                                        kwargs1 = {f'ng{n_pg}ell{l}m0': np.round(freqs[0], 6)}
+                                        kwargs1 = {f'ng{abs(n_pg)}ell{l}m0': np.round(freqs[0], 6)}
                                         h = h.assign(**kwargs1)
                     h_final_list.append(h)
     h_final = pd.concat(h_final_list)   
@@ -139,8 +139,43 @@ def get_hist(archive_dir, index):
     h = pd.merge(h, profile_index, on='model_number', how='inner').drop_duplicates()
     return h, suffix
 
+def find_stabilization_point(x, y, threshold=0.06, window=100):
+    dy = np.gradient(y, x)
+    d2y = np.gradient(dy, x)
+    d2y_diffs = np.diff(d2y)
+    for i in range(len(d2y_diffs)):
+        tmp = d2y_diffs[i:i+window]
+        if np.all(np.abs(tmp) < threshold) and d2y[i] > 0:
+            stabilization_point = x[i]
+            break
+    return stabilization_point
 
-def setup_and_run(archive_dir, index):
+def change_phase(df):
+    old_seq = df.phase_of_evolution.values
+    new_seq = old_seq.copy()
+    Dnu = df.Dnu.values
+    age = df.Myr.values
+    mid = age.max()/2
+    teff = df.teff.values
+    dteff = np.gradient(teff, age)
+    stabilization_point = find_stabilization_point(age, Dnu)
+    stabilization_index = np.where(age == stabilization_point)[0][0]
+    for i in range(0, len(old_seq)):
+        if new_seq[i] >1:
+            new_seq[i] = 2
+        if i > stabilization_index:
+            if age[i] <= 50:
+                new_seq[i] = 3
+            else:
+                new_seq[i] = 4
+                # if new_seq[i+1]==5:
+                if age[i] > mid and dteff[i] > 0:
+                    break
+    new_seq[i:] = 5
+    df['new_phase_of_evolution'] = new_seq
+    return df
+
+def setup_and_run(archive_dir, index, for_grid=True):
     sys.stdout.flush()
     print('\nStart Date: ', time.strftime("%d-%m-%Y", time.localtime()))
     print('Start time: ', time.strftime("%H:%M:%S", time.localtime()))
@@ -156,8 +191,28 @@ def setup_and_run(archive_dir, index):
     h["omega_c"] = h["omega"] / h["surf_avg_omega_div_omega_crit"]
     h.reset_index(drop=True, inplace=True)
     h.drop(columns=["surf_avg_omega_div_omega_crit", "log_R"], inplace=True)
-    h.to_csv(os.path.join(archive_dir, 'minisauruses', f'minisaurus_{suffix}.csv'), index=False)
+    # if for_grid:
+    #     cols_reqd = ['m', 'z', 'v', 'Myr', 'param', 'phase_of_evolution', 'mesa_run_time', 'gyre_run_time', 'tr_num', 'teff', 'log_L', 'density', 'Dnu', 'eps',  'n1ell0m0', 'n2ell0m0',
+    #             'n3ell0m0', 'n4ell0m0', 'n5ell0m0', 'n6ell0m0', 'n7ell0m0', 'n8ell0m0',
+    #             'n9ell0m0', 'n10ell0m0', 'n11ell0m0', 'n1ell1m0', 'n2ell1m0', 'n3ell1m0',
+    #             'n4ell1m0', 'n5ell1m0', 'n6ell1m0', 'n7ell1m0', 'n8ell1m0', 'n9ell1m0',
+    #             'n10ell1m0', 'n1ell2m0', 'n2ell2m0', 'n3ell2m0', 'n4ell2m0', 'n5ell2m0',
+    #             'n6ell2m0', 'n7ell2m0', 'n8ell2m0', 'n9ell2m0', 'n10ell2m0', 'ng-1ell2m0',
+    #             'n0ell2m0', 'n1ell3m0', 'n2ell3m0', 'n3ell3m0', 'n4ell3m0', 'n5ell3m0',
+    #             'n6ell3m0', 'n7ell3m0', 'n8ell3m0', 'n9ell3m0', 'n10ell3m0', 'ng-1ell3m0',
+    #             'n0ell3m0', 'ng-3ell3m0', 'ng-2ell3m0', 'n11ell1m0', 'n11ell2m0', 'ng-2ell2m0',
+    #             'n11ell3m0', 'ng-4ell1m0', 'ng-3ell1m0', 'ng-2ell1m0', 'ng-1ell1m0',
+    #             'ng-4ell2m0', 'ng-3ell2m0', 'ng-4ell3m0', 'omega', 'R_eq', 'R_polar', 'omega_c']
+    #     h = h[cols_reqd]
+    h.sort_values('Myr', inplace=True)
+    h = change_phase(h)
+    h['phase_of_evolution'] = h['new_phase_of_evolution']
+    h.drop('new_phase_of_evolution', axis=1, inplace=True)
+    # h.to_csv(os.path.join(archive_dir, 'minisauruses', f'minisaurus_{suffix}.csv'), index=False)
+    h.to_feather(os.path.join(archive_dir, 'minisauruses', f'minisaurus_{suffix}.feather'))
     
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run parameter tests for MESA',
