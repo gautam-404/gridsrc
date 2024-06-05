@@ -97,7 +97,7 @@ def get_gyre_freqs(archive_dir, hist, suffix):
 
 
 def get_hist(archive_dir, index):
-    input_file = os.path.join(archive_dir, 'track_inputs_tmp.csv')
+    input_file = os.path.join(archive_dir, 'track_inputs.csv')
     inputs = pd.read_csv(input_file)
     track = inputs.iloc[index]['track']
     m = float(track.split('_')[0][1:])
