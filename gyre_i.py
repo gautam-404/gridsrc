@@ -137,11 +137,12 @@ def get_gyre_params(archive_name, suffix=None, zinit=None, run_on_cool=False, fi
             muhz_to_cd = 86400/1.0E6
             mesa_dnu = row["delta_nu"]
             dnu = mesa_dnu * muhz_to_cd
-            freq_min = int(1.5 * dnu)
+            # freq_min = int(1.5 * dnu)
+            freq_min = 0.1
             freq_max = int(12 * dnu)
         except:
             dnu = None
-            freq_min = 15
+            freq_min = 0.1
             if zinit < 0.003:
                 freq_max = 150
             else:
