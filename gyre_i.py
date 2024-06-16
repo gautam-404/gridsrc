@@ -36,10 +36,23 @@ def get_done_profile_idxs(archive_dir, track):
     Get the profile indexes for which GYRE has already been run.
     '''
     if os.path.exists(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz")):
+        done_profiles = []
         try:
             with tarfile.open(os.path.join(archive_dir, "gyre", f"freqs_{track}.tar.gz"), "r:gz") as tar:
-                return sorted([int(p.split('-')[0].split('profile')[-1]) for p in tar.getnames()])
-        except:
+                for file in tar.getmembers():
+                    if 'freqs.dat' in file.name:
+                        df = pd.read_csv(tar.extractfile(file), sep='\s+', skiprows=5)
+                        # print(df)
+                        # print(df.columns)
+                        dfl0 = df.loc[df['l'] == 0].n_pg.values
+                        dfl1 = df.loc[df['l'] == 1].n_pg.values
+                        dfl2 = df.loc[df['l'] == 2].n_pg.values
+                        dfl3 = df.loc[df['l'] == 3].n_pg.values
+                        if dfl0[dfl0>0].min() == 1 and dfl1[dfl1>0].min() == 1 and dfl2[dfl2>0].min() == 1 and dfl3[dfl3>0].min() == 1:
+                            done_profiles.append(int(file.name.split('-')[0].split('profile')[-1]))
+            return done_profiles
+        except Exception as e:
+            print(e)
             print("Error reading previously saved freqs tar")
             return []
     else:
@@ -192,6 +205,7 @@ def run_gyre(gyre_in, archive_dir, index, cpu_per_process=1, jobfs=None, file_fo
     else:
         profiles_dir = untar_profiles(profiles_tar=os.path.join(archive_dir, 'profiles', f'profiles_{track}.tar.gz'), track=track, jobfs=jobfs)
         done_profiles = get_done_profile_idxs(archive_dir, track)
+        # exit()
         print(f"{len(done_profiles)} profiles already done\n")
         profiles = [p for i,p in enumerate(profiles) if i+1 not in done_profiles]
         gyre_input_params = [p for i,p in enumerate(gyre_input_params) if i+1 not in done_profiles]
