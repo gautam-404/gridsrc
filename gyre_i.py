@@ -44,11 +44,12 @@ def get_done_profile_idxs(archive_dir, track):
                         df = pd.read_csv(tar.extractfile(file), sep='\s+', skiprows=5)
                         # print(df)
                         # print(df.columns)
+                        n_reqd = range(1, 11)
                         dfl0 = df.loc[df['l'] == 0].n_pg.values
                         dfl1 = df.loc[df['l'] == 1].n_pg.values
                         dfl2 = df.loc[df['l'] == 2].n_pg.values
                         dfl3 = df.loc[df['l'] == 3].n_pg.values
-                        if dfl0[dfl0>0].min() == 1 and dfl1[dfl1>0].min() == 1 and dfl2[dfl2>0].min() == 1 and dfl3[dfl3>0].min() == 1:
+                        if set(n_reqd).difference(set(dfl0)) == set() and set(n_reqd).difference(set(dfl1)) == set() and set(n_reqd).difference(set(dfl2)) == set() and set(n_reqd).difference(set(dfl3)) == set():
                             done_profiles.append(int(file.name.split('-')[0].split('profile')[-1]))
             return done_profiles
         except Exception as e:
@@ -146,20 +147,11 @@ def get_gyre_params(archive_name, suffix=None, zinit=None, run_on_cool=False, fi
             diff_scheme = "COLLOC_GL2"
         else:
             diff_scheme = "MAGNUS_GL2"
-        try:
-            muhz_to_cd = 86400/1.0E6
-            mesa_dnu = row["delta_nu"]
-            dnu = mesa_dnu * muhz_to_cd
-            # freq_min = int(1.5 * dnu)
-            freq_min = 3
-            freq_max = int(12 * dnu)
-        except:
-            dnu = None
-            freq_min = 3
-            if zinit < 0.003:
-                freq_max = 150
-            else:
-                freq_max = 95
+        freq_min = 0.8
+        if zinit < 0.003:
+            freq_max = 150
+        else:
+            freq_max = 95
         profiles.append(gyre_profile)
         gyre_input_params.append({"freq_min": freq_min, "freq_max": freq_max, "diff_scheme": diff_scheme})
     return profiles, gyre_input_params
