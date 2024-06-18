@@ -66,8 +66,9 @@ def process_freqs_file(file, h_master):
                         ts.rename(columns={'Re(freq)': 'freq'}, inplace=True)
                     h["Dnu"] = model_Dnu(ts)
                     h["eps"] = epsilon(ts)
-                    n_pg_list = ts.n_pg.unique()
-                    n_pg_list = [n_pg for n_pg in n_pg_list if -11 <= n_pg <= 11]
+                    # n_pg_list = ts.n_pg.unique()
+                    # n_pg_list = [n_pg for n_pg in n_pg_list if -11 <= n_pg <= 11]
+                    n_pg_list = [int(n_pg) for n_pg in range(-6, 12)]
                     l_max = 3
                     for l in range(0, l_max+1):
                         for n_pg in n_pg_list:
@@ -191,19 +192,12 @@ def setup_and_run(archive_dir, index, for_grid=True):
     h["omega_c"] = h["omega"] / h["surf_avg_omega_div_omega_crit"]
     h.reset_index(drop=True, inplace=True)
     h.drop(columns=["surf_avg_omega_div_omega_crit", "log_R"], inplace=True)
-    # if for_grid:
-    #     cols_reqd = ['m', 'z', 'v', 'Myr', 'param', 'phase_of_evolution', 'mesa_run_time', 'gyre_run_time', 'tr_num', 'teff', 'log_L', 'density', 'Dnu', 'eps',  'n1ell0m0', 'n2ell0m0',
-    #             'n3ell0m0', 'n4ell0m0', 'n5ell0m0', 'n6ell0m0', 'n7ell0m0', 'n8ell0m0',
-    #             'n9ell0m0', 'n10ell0m0', 'n11ell0m0', 'n1ell1m0', 'n2ell1m0', 'n3ell1m0',
-    #             'n4ell1m0', 'n5ell1m0', 'n6ell1m0', 'n7ell1m0', 'n8ell1m0', 'n9ell1m0',
-    #             'n10ell1m0', 'n1ell2m0', 'n2ell2m0', 'n3ell2m0', 'n4ell2m0', 'n5ell2m0',
-    #             'n6ell2m0', 'n7ell2m0', 'n8ell2m0', 'n9ell2m0', 'n10ell2m0', 'ng-1ell2m0',
-    #             'n0ell2m0', 'n1ell3m0', 'n2ell3m0', 'n3ell3m0', 'n4ell3m0', 'n5ell3m0',
-    #             'n6ell3m0', 'n7ell3m0', 'n8ell3m0', 'n9ell3m0', 'n10ell3m0', 'ng-1ell3m0',
-    #             'n0ell3m0', 'ng-3ell3m0', 'ng-2ell3m0', 'n11ell1m0', 'n11ell2m0', 'ng-2ell2m0',
-    #             'n11ell3m0', 'ng-4ell1m0', 'ng-3ell1m0', 'ng-2ell1m0', 'ng-1ell1m0',
-    #             'ng-4ell2m0', 'ng-3ell2m0', 'ng-4ell3m0', 'omega', 'R_eq', 'R_polar', 'omega_c']
-    #     h = h[cols_reqd]
+    if for_grid:
+        cols_reqd = ['m', 'z', 'v', 'Myr', 'param', 'phase_of_evolution', 'mesa_run_time', 'gyre_run_time', 'tr_num', 
+                  'teff', 'log_L', 'density', 'Dnu', 'eps', 'R_eq', 'R_polar', 'omega', 'omega_c']
+        freq_cols = [col for col in h.columns if 'ell' in col]
+        cols_reqd += freq_cols
+        h = h[cols_reqd]
     h.sort_values('Myr', inplace=True)
     h = change_phase(h)
     h['phase_of_evolution'] = h['new_phase_of_evolution']
